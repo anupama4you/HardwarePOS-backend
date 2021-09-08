@@ -73,4 +73,20 @@ exports.getItemById = async (req, res) => {
     res.send(result);
 };
 
+exports.getStockWithBatches = async (req, res) => {
+  const result = await Item.getStockWithBatchesQuery();
+  res.send(result);
+};
+
+exports.getLatestPriceByItemId = async (req, res) => {
+  const result = await Item.getLatestPriceByItemIdQuery(req.params.itemId);
+  res.send(result);
+};
+
+exports.getItemTransactionHistory = async (req, res) => {
+  const result = await Item.getItemTransactionHistoryQuery(req.params.itemId);
+  res.send(result);
+};
+
+
   

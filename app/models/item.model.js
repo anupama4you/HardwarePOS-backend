@@ -89,4 +89,175 @@ Item.editItemQuery = async ({
     return result;
   };
 
+  Item.getStockWithBatchesQuery = async () => {
+    const result = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `select i.*,b.*,FLOOR(b.qty) as qtyOnHand,
+          TRUNCATE(substring(b.qty, -2 )/100*i.length,0) as subQtyOnHand,
+          s.name as subcategory_name, c.name as category_name
+          from batch b, item i, category c, subcategory s
+          where b.item_item_id = i.item_id and b.qty != 0
+          and i.subCategory_id = s.subCat_id
+          and s.category_id = c.cat_id
+          ;`,
+          (batchErr, batchResult) => {
+            connection.release();
+            if (batchErr) {
+              reject(batchErr);
+            } else {
+              resolve(batchResult);
+            }
+          },
+        );
+      });
+    });
+    return result;
+  };
+
+  Item.getLatestPriceByItemIdQuery = async (itemId) => {
+    const result = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `SELECT * FROM batch b where b.item_item_id = ? order by b.batch_id desc limit 1
+          `, [itemId],
+          (batchErr, batchResult) => {
+            connection.release();
+            if (batchErr) {
+              reject(batchErr);
+            } else {
+              resolve(batchResult);
+            }
+          },
+        );
+      });
+    });
+    return result;
+  };
+
+  Item.getItemTransactionHistoryQuery = async (item_id) => {
+    const result = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `SELECT
+          s.order_Id as id, batch_batch_id, 'supplire' as type , s.date as date
+          , i.name as item, sob.supplyorder_has_batch__qty as quantity
+          FROM supplyorder_has_batch sob, batch b, item i, supplyorder s
+          where sob.batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and sob.supplyorder_order_Id = s.order_Id
+          and i.item_id = ${item_id}
+          UNION
+          SELECT
+          co.invoice_no as id, batch_batch_id, 'customer' as type, co.customer_order_date as date
+          , i.name as item, (-1*cob.customer_order_has_batch_qty) as quantity
+          FROM customer_order_has_batch cob, batch b, item i, customer_order co
+          where cob.batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and co.idcustomer_order = cob.customer_order_idcustomer_order
+          and i.item_id = ${item_id}
+          UNION
+          SELECT
+          ir.iditem_return as id, ir.customer_order_has_batch_batch_batch_id, 'return' as type,
+          ir.item_return_date as date
+          , i.name as item, ir.item_return_qty as quantity
+          FROM item_return ir, batch b, item i
+          where ir.customer_order_has_batch_batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and i.item_id = ${item_id}
+          order by date
+          ;`,
+          (batchErr, batchResult) => {
+            connection.release();
+            if (batchErr) {
+              reject(batchErr);
+            } else {
+              resolve(batchResult);
+            }
+          },
+        );
+      });
+    });
+    const result2 = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `select
+          (
+          SELECT
+          sum(sob.supplyorder_has_batch__qty)
+          FROM supplyorder_has_batch sob, batch b, item i, supplyorder s
+          where sob.batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and sob.supplyorder_order_Id = s.order_Id
+          and i.item_id = ${item_id}
+          ) as totalIn,
+          (
+          SELECT sum(cob.customer_order_has_batch_qty)
+          FROM customer_order_has_batch cob, batch b, item i, customer_order co
+          where cob.batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and co.idcustomer_order = cob.customer_order_idcustomer_order
+          and i.item_id = ${item_id}
+          ) as totalOut,
+          (
+          SELECT IF(sum(ir.item_return_qty) IS NULL or sum(ir.item_return_qty) = '', 0, sum(ir.item_return_qty)) as balance
+          FROM item_return ir, batch b, item i
+          where ir.customer_order_has_batch_batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and i.item_id = ${item_id}
+          ) as totalReturn,
+          (
+          (
+          SELECT
+          sum(sob.supplyorder_has_batch__qty)
+          FROM supplyorder_has_batch sob, batch b, item i, supplyorder s
+          where sob.batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and sob.supplyorder_order_Id = s.order_Id
+          and i.item_id = ${item_id}
+          )-(
+          SELECT sum(cob.customer_order_has_batch_qty)
+          FROM customer_order_has_batch cob, batch b, item i, customer_order co
+          where cob.batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and co.idcustomer_order = cob.customer_order_idcustomer_order
+          and i.item_id = ${item_id}
+          )
+          )+(
+          SELECT IF(sum(ir.item_return_qty) IS NULL or sum(ir.item_return_qty) = '', 0, sum(ir.item_return_qty)) as balance
+          FROM item_return ir, batch b, item i
+          where ir.customer_order_has_batch_batch_batch_id = b.batch_id
+          and b.item_item_id = i.item_id
+          and i.item_id = ${item_id}
+          ) as balance
+          ;`,
+          (batchErr, batchResult) => {
+            connection.release();
+            if (batchErr) {
+              reject(batchErr);
+            } else {
+              resolve(batchResult);
+            }
+          },
+        );
+      });
+    });
+    return {
+      summery: result2,
+      history: result
+    };
+  };
+
   module.exports = Item; 

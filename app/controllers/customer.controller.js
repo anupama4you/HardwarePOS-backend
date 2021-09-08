@@ -25,3 +25,8 @@ exports.deleteCustomer = async (req, res) => {
     const result = await Customer.deleteCustomerQuery(req.params.customerId);
     res.send(result);
 };
+
+exports.addCustomerOrder = async (req, res) => {
+    // const result = await Customer.addCustomerOrder(req.body);
+    // res.send(result);
+};
