@@ -383,5 +383,30 @@ Customer.addCustomerQuery = async ({
     // save order details with batch id
   };
   
+  Customer.getReturnDebitByCustomerQuery = async (customerId) => {
+    const result = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `select sum(ir.debit_balance) as debit
+          from customer_order co, item_return ir
+          where ir.customer_order_has_batch_customer_order_idcustomer_order = co.idcustomer_order
+          and co.customer_idcustomer =${customerId}
+          and ir.debit_balance != 0`,
+          (returnDebitErr, returnDebitResult) => {
+            connection.release();
+            if (returnDebitErr) {
+              reject(returnDebitErr);
+            } else {
+              resolve(returnDebitResult);
+            }
+          },
+        );
+      });
+    });
+    return result;
+  };
 
   module.exports = Customer;

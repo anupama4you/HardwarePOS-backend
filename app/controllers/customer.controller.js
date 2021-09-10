@@ -30,3 +30,8 @@ exports.addCustomerOrder = async (req, res) => {
     const result = await Customer.addCustomerOrder(req.body);
     res.send(result);
 };
+
+exports.getReturnDebitByCustomer = async (req, res) => {
+    const result = await Customer.getReturnDebitByCustomerQuery(req.params.customerId);
+    res.send(result);
+};

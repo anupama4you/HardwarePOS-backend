@@ -11,6 +11,9 @@ module.exports = app => {
     app.delete("/users/:firebaseId", users.deleteByFirebaseId);
     // app.delete("/users", customers.deleteAll);
 
+    //******Auth */
+    app.get('/auth', users.getAuth );
+
     const itemController = require("../controllers/item.controller");
 
     //******Items */
@@ -22,6 +25,7 @@ module.exports = app => {
     app.get('/getStock',itemController.getStockWithBatches);
     app.get('/getLatestPriceByItemId/:itemId',itemController.getLatestPriceByItemId);
     app.get('/getItemTransactionHistory/:itemId',itemController.getItemTransactionHistory);
+    app.get('/getROLReachedItems',itemController.getROLReachedItems);
 
     const customerController = require("../controllers/customer.controller");
 
@@ -34,6 +38,9 @@ module.exports = app => {
 
     //******Add customer order */
     app.post('/addCustomerOrder', customerController.addCustomerOrder)
+
+    //******Get return debit by customer */
+    app.get('/getReturnDebitByCustomer/:customerId',customerController.getReturnDebitByCustomer);
 
     const categoryController = require('../controllers/category.controller');
 
@@ -71,4 +78,16 @@ module.exports = app => {
     app.get('/getOrdersByCustomerId/:customerId/:idToken', customerOrderController.getOrdersByCustomerId);
     app.get('/getOrderDetailsByOrderId/:customerOrderId', customerOrderController.getOrderDetailsByOrderId);
     app.put('/updateOrderId', customerOrderController.updateCustomerOrderById);
+
+    const paymentController = require('../controllers/payment.controller');
+
+    //******Payments */
+    app.post('/payment', paymentController.addPayment);
+    app.post('/return', paymentController.addReturnItem);
+
+    const reportController = require('../controllers/report.controller')
+
+    //******Reports */
+    app.get('/gerReportByDateRange', reportController.getReportStatictics)
+    app.get('/gerReportDetailsByDateRangeAndType', reportController.getReportDetail)
   };

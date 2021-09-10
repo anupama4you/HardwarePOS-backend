@@ -260,4 +260,37 @@ Item.editItemQuery = async ({
     };
   };
 
+  Item.getROLReachedItems = async (res) => {
+    const result = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `select item.item_id, item.code, item.name, item.qty, item.length, item.description,
+            subcategory.name as subcategory_name, category.name as category_name,
+            (select sum(FLOOR(b.qty)) from batch b where b.item_item_id = item.item_id and b.qty != 0 ) as qtyOnHand,
+            (select TRUNCATE(sum(substring(b.qty, -2 ))/100*item.length,0) from batch b where b.item_item_id = item.item_id and b.qty != 0 ) as subQtyOnHand
+            from category,
+            item inner join subcategory where item.subCategory_id = subcategory.subCat_id and
+            subcategory.category_id = category.cat_id
+            and item.rol >= (select sum(b.qty) from batch b where b.item_item_id = item.item_id and b.qty != 0 )
+            ;
+          `,
+          (getROLReachedItemsErr, getROLReachedItemsResult) => {
+            connection.release();
+            if (getROLReachedItemsErr) {
+              resolve(getROLReachedItemsErr);
+            } else {
+              // eslint-disable-next-line
+              getROLReachedItemsResult.code = 200;
+              resolve(getROLReachedItemsResult);
+            }
+          },
+        );
+      });
+    });
+    return result;
+  };
+
   module.exports = Item; 

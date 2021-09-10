@@ -90,9 +90,24 @@ class UserService{
     
 	}
 
+  async verifyIdToken(idToken) {
+    //
+    const res = new Promise((resolve, reject) => {
+      // eslint-disable-next-line
+      admin.auth().verifyIdToken(idToken)
+      // eslint-disable-next-line
+      .then((decodedToken) => {
+          // eslint-disable-next-line
+          const uid = decodedToken.uid;
+          resolve(uid);
+          // eslint-disable-next-line
+        }).catch((error) => {
+          reject(error);
+        });
+    });
+    return res;
+  }
+
 }
-
-
-
 
 module.exports = new UserService();

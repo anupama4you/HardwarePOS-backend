@@ -1,9 +1,10 @@
 const pool = require('../models/db');
+const firebase = require('../controllers/user.firebase')
 
 const CustomerOrder = function(customerorder) {};
 
 CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken) => {
-    const authUser = await verifyIdToken(idToken);
+    const authUser = await firebase.verifyIdToken(idToken);
     const user = await getUserByFirebaseUIDQuery({ userId: authUser });
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {

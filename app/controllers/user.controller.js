@@ -158,5 +158,9 @@ exports.updateByFirebaseId = async (req, res) => {
           res.send(data);
       }
     });
+  };
 
+  exports.getAuth = async (req, res) => {
+    const result = await userService.verifyIdToken();
+    res.send(result);
   };

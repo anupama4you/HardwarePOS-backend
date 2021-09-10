@@ -88,5 +88,8 @@ exports.getItemTransactionHistory = async (req, res) => {
   res.send(result);
 };
 
-
+exports.getROLReachedItems = async (req, res) => {
+  const result = await Item.getROLReachedItems();
+  res.send(result);
+};
   
