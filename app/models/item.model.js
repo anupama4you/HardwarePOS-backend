@@ -67,7 +67,7 @@ Item.editItemQuery = async ({
           reject(err);
         }
         connection.query(
-          `select * from item
+          `select item_id,code,name,qty,length AS len,description, subCategory_id, rol, isDeleted from item
           WHERE item_id = ?
           `,
           [
@@ -107,6 +107,7 @@ Item.editItemQuery = async ({
           (batchErr, batchResult) => {
             connection.release();
             if (batchErr) {
+              console.log(batchErr)
               reject(batchErr);
             } else {
               resolve(batchResult);
@@ -132,6 +133,7 @@ Item.editItemQuery = async ({
             if (batchErr) {
               reject(batchErr);
             } else {
+              console.log(batchResult)
               resolve(batchResult);
             }
           },
@@ -149,24 +151,29 @@ Item.editItemQuery = async ({
         }
         connection.query(
           `SELECT
-          s.order_Id as id, batch_batch_id, 'supplire' as type , s.date as date
+          sup.name as name,
+          s.order_Id as id, batch_batch_id, 'supplier' as type , s.date as date
           , i.name as item, sob.supplyorder_has_batch__qty as quantity
-          FROM supplyorder_has_batch sob, batch b, item i, supplyorder s
+          FROM supplyorder_has_batch sob, batch b, item i, supplyorder s, supplier sup
           where sob.batch_batch_id = b.batch_id
           and b.item_item_id = i.item_id
           and sob.supplyorder_order_Id = s.order_Id
+          and sup.supplier_id = s.supplier_id
           and i.item_id = ${item_id}
           UNION
           SELECT
+          cus.customer_name,
           co.invoice_no as id, batch_batch_id, 'customer' as type, co.customer_order_date as date
           , i.name as item, (-1*cob.customer_order_has_batch_qty) as quantity
-          FROM customer_order_has_batch cob, batch b, item i, customer_order co
+          FROM customer_order_has_batch cob, batch b, item i, customer_order co, customer cus
           where cob.batch_batch_id = b.batch_id
           and b.item_item_id = i.item_id
           and co.idcustomer_order = cob.customer_order_idcustomer_order
+          and cus.idcustomer = co.idcustomer_order  
           and i.item_id = ${item_id}
           UNION
           SELECT
+          ir.customer_order_has_batch_customer_order_idcustomer_order,
           ir.iditem_return as id, ir.customer_order_has_batch_batch_batch_id, 'return' as type,
           ir.item_return_date as date
           , i.name as item, ir.item_return_qty as quantity
@@ -180,7 +187,7 @@ Item.editItemQuery = async ({
             connection.release();
             if (batchErr) {
               reject(batchErr);
-            } else {
+            } else {  
               resolve(batchResult);
             }
           },

@@ -7,6 +7,6 @@ exports.addPayment = async (req, res) => {
 };
 
 exports.addReturnItem = async (req, res) => {
-    const result = await new Payment().addPaymentQuery(req.body);
+    const result = await Payment.addReturnItemQuery(req.body);
     res.send(result);
 };

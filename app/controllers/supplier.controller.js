@@ -32,19 +32,22 @@ exports.getAllSuppliers = async (req, res) => {
 // };
 
 exports.addSupplyOrder = async (req, res) => {
+  console.log(req.body)
     if (!req.body) {
-        res.json({
+        res.send({
           code: 100,
           message: 'please provide valid parameters'
         });
         return;
-      } else if (!req.body.supplireId || !req.body.supplyOrder.date || !req.body.supplyOrder.items) {
-        res.json({
+      } else if (!req.body.supplireId || !req.body.date || !req.body.items) {
+        res.send({
           code: 100,
           message: 'please provide valid parameters'
         });
         return;
       }
     const result = await Supplier.addSupplyOrder(req.body, res);
-    res.send(result);
+    res.send({
+      code: 200,
+      message : result});
 };

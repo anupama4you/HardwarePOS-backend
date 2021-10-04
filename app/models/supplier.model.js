@@ -141,7 +141,7 @@ Supplier.addSupplier = async ({
                 return connection.rollback(() => {
                   resolve({
                     code: 100,
-                    message: 'supplire order must contain items'
+                    message: 'Supplier order must contain items'
                   });
                 });
               }
@@ -162,9 +162,11 @@ Supplier.addSupplier = async ({
                     }
                     if (matchingBatches.length > 0) {
                       // found previous batch and update qty of this
+                      console.log(items[i].supplyOrderNote)
                       connection.query(
-                        `UPDATE batch SET qty=(qty+${items[i].qty}) WHERE batch_id = ${matchingBatches[0].batch_id}`,
-                        (updateBatchError) => {
+                        `UPDATE batch SET qty=(qty+?), supply_order_note=? WHERE batch_id = ?`,
+                        [items[i].qty, items[i].supplyOrderNote, matchingBatches[0].batch_id] ,
+                      (updateBatchError) => {
                           if (updateBatchError) {
                             return connection.rollback(() => {
                               reject(updateBatchError);
@@ -199,9 +201,9 @@ Supplier.addSupplier = async ({
                       // create new batch here
                       connection.query(
                         `INSERT INTO batch(batch_id, buying_price, selling_price,
-                          qty, item_item_id)
+                          qty, item_item_id, supply_order_note)
                           VALUES (null, ${items[i].buyPrice}, ${items[i].sellPrice},
-                             ${items[i].qty}, ${items[i].id})`,
+                             ${items[i].qty}, ${items[i].id}, ${items[i].supplyOrderNote} )`,
                         (addBatchError, addBatchRes) => {
                           if (addBatchError) {
                             return connection.rollback(() => {

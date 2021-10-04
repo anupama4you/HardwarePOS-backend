@@ -48,11 +48,12 @@ exports.addItem = async (item, res) => {
       connection.query(`insert into item (code, name, qty, length, description, subCategory_id) values
       ('${itemcode}', '${itemname}',${qty}, ${length}, '${itemdesc}',${subCategory_id});`, (err) => {
         connection.release();
-        if (err)
+        if (err){
           res.status(500).send({
             message:
               err.message || "Some error occurred while retrieving items."
           });
+        }
         else 
             res.status(200).send({
                 message: "Successfully added items"

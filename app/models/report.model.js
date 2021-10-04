@@ -236,6 +236,7 @@ fromDate, toDate, type, idToken,
     const userId = authUser;
     const user = await userModel.findByFirebaseId(userId);
     const userRole = user[0].user_role_type;
+    console.log(userRole);
     const reportDetail = await Report.getReportDetailQuery(fromDate, toDate, type, userRole);
     return (reportDetail);
 };

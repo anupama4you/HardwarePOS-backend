@@ -1,4 +1,6 @@
 const pool = require('../models/db');
+const Payment = require('../models/payment.model')
+const ReturnItem = require('../models/returnItem.model')
 
 const Customer = function(customer) {};
 
@@ -132,8 +134,9 @@ Customer.addCustomerQuery = async ({
     } = supplyOrder;
     // console.log(supplyOrder);
     // save customer order
+    let result = null;
     try {
-      let result = await new Promise((resolve, reject) => {
+      result = await new Promise((resolve, reject) => {
         pool.getConnection((err, connection) => {
           if (err) {
             reject(err);
@@ -239,6 +242,7 @@ Customer.addCustomerQuery = async ({
                                 reject(OrderDetailerror);
                               });
                             }
+                            console.log('***start**')
                             // update batch remain qty here
                             connection.query(
                               'UPDATE batch SET qty = (qty- ?) WHERE `batch_id` =?',
@@ -261,6 +265,7 @@ Customer.addCustomerQuery = async ({
                             return 1;
                           },
                         );
+                        
                         if (errorBatchQty) {
                           connection.release();
                           return connection.rollback(() => {
@@ -290,7 +295,7 @@ Customer.addCustomerQuery = async ({
                         });
                       }
                       connection.release();
-                      const customer = await getCustomerQuery({ customerId });
+                      const customer = await Customer.getCustomerQuery(customerId);
                       const response = {
                         code: 200, status: 'Success',
                         orderId: results.insertId,
@@ -311,11 +316,11 @@ Customer.addCustomerQuery = async ({
       console.log('11111111111111111111111111111111111 ');
       console.log(result);
       const customerDebit =
-        await getReturnDebitByCustomerQuery(customerId);
+        await ReturnItem.getReturnDebitByCustomerQuery(customerId);
       if (customerDebit[0].debit) {
         if (customerDebit[0].debit > total) {
           // 1. add total as payment
-          addPaymentQuery({
+          Payment.addPaymentQuery({
             date,
             remark: 'Debit Balance',
             amount: total,
@@ -326,17 +331,17 @@ Customer.addCustomerQuery = async ({
           });
           // 2. update remain balance
           //    2.1 get debit rows
-          const returns = await getReturnsByCustomerQuery(customerId);
+          const returns = await  ReturnItem.getReturnsByCustomerQuery(customerId);
           let usedBalance = total;
           // eslint-disable-next-line no-plusplus
           for (let i = 0; i < returns.length; i++) {
             if (usedBalance > returns[i].debit_balance) {
-              updateDebitBalanceByIdQuery({
+             await ReturnItem.updateDebitBalanceByIdQuery({
                 itemReturnId: returns[i].iditem_return, debitBalance: 0,
               });
               usedBalance -= returns[i].debit_balance;
             } else {
-              updateDebitBalanceByIdQuery({
+              await ReturnItem.updateDebitBalanceByIdQuery({
                 itemReturnId: returns[i].iditem_return,
                 debitBalance: (returns[i].debit_balance - usedBalance),
               });
@@ -345,7 +350,7 @@ Customer.addCustomerQuery = async ({
           }
         } else {
           // 1. add debit as payment
-          addPaymentQuery({
+          Payment.addPaymentQuery({
             date,
             remark: 'Debit Balance',
             amount: customerDebit[0].debit,
@@ -355,15 +360,15 @@ Customer.addCustomerQuery = async ({
             checqueDate,
           });
           // 2. set all debit to 0
-          const returns = await getReturnsByCustomerQuery(customerId);
+          const returns = await ReturnItem.getReturnsByCustomerQuery(customerId);
           // eslint-disable-next-line no-plusplus
           for (let i = 0; i < returns.length; i++) {
-            updateDebitBalanceByIdQuery({ itemReturnId: returns[i].iditem_return, debitBalance: 0 });
+            ReturnItem.updateDebitBalanceByIdQuery({ itemReturnId: returns[i].iditem_return, debitBalance: 0 });
           }
         }
       }
       if (paid > 0) {
-        addPaymentQuery({
+        Payment.addPaymentQuery({
           date,
           remark: 'Initial Payment',
           amount: paid,
@@ -373,40 +378,14 @@ Customer.addCustomerQuery = async ({
           checqueDate,
         });
       }
-      return (result);
+      return(result);
     } catch (e) {
       console.log('error catch');
       console.log(e);
-      return e;
+      return(e);
     }
-    
-    // save order details with batch id
-  };
   
-  Customer.getReturnDebitByCustomerQuery = async (customerId) => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select sum(ir.debit_balance) as debit
-          from customer_order co, item_return ir
-          where ir.customer_order_has_batch_customer_order_idcustomer_order = co.idcustomer_order
-          and co.customer_idcustomer =${customerId}
-          and ir.debit_balance != 0`,
-          (returnDebitErr, returnDebitResult) => {
-            connection.release();
-            if (returnDebitErr) {
-              reject(returnDebitErr);
-            } else {
-              resolve(returnDebitResult);
-            }
-          },
-        );
-      });
-    });
-    return result;
-  };
+    // save order details with batch id
+  };  
 
   module.exports = Customer;

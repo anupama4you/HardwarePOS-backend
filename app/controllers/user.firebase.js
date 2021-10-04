@@ -25,41 +25,27 @@ class UserService{
   /******** Update User *******/
 	async update(uid, user) {
 
+    console.log(uid)
+
       // Check user status
-		if (user.user_status === "activated") {
 			return await admin.auth().updateUser(uid, 
         {
-            email : user.email,
-            password : user.password,
-            disabled : false,
+            email : user.user_email,
+            disabled : !user.user_status,
+            displayName : user.name,
         });
-		} else {
-			return await admin.auth().updateUser(uid, 
-        {
-            email : user.email,
-            password : user.password,
-            disabled : true
-        });
-		}	
 	}
 
   /******** Create User *******/
   async create(user) {
-      await admin
+      return await admin
         .auth()
         .createUser({
-          email: user.email,
+          email: user.user_email,
+          displayName: user.name,
           password: user.password,
-        })
-        .then((userRecord) => {
-            user.user_firebase_uid = userRecord.uid;
-          // console.log(userRecord);
-            return (user)
-        })
-        .catch((error) => {
-          return('Error creating new user on firebase:', error);
+          disabled: !user.user_status
         });
-        return (user)
     }
 
   // const listAllUsers = (nextPageToken) => {

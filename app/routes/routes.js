@@ -90,4 +90,10 @@ module.exports = app => {
     //******Reports */
     app.get('/gerReportByDateRange', reportController.getReportStatictics)
     app.get('/gerReportDetailsByDateRangeAndType', reportController.getReportDetail)
+
+    const quotationController = require('../controllers/quotation.controller');
+
+    //****Quotations*****/
+    app.post('/add_quotation', quotationController.addItem);
+    app.get('/get_quotation', quotationController.getAllQuotations);
   };

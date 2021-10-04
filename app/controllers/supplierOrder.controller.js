@@ -7,6 +7,7 @@ exports.getOrdersBySupplireId = async (req, res) => {
 };
 
 exports.getOrderDetailsBySupplireOrderId = async (req, res) => {
+  console.log(req.params.supOrderId)
     const result = await supplierOrder.getOrderDetailsBySupplireOrderId(req.params.supOrderId);
     res.send(result);
 };

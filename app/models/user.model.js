@@ -1,4 +1,4 @@
-const connect = require('./db')
+const pool = require('../models/db');
 
 // constructor
 const User = function(user) {
@@ -12,11 +12,11 @@ const User = function(user) {
 
   //add users
   User.addUser = async (newUser, result) => {
-    connect.getConnection((err, connection) => {
+    pool.getConnection((err, connection) => {
       if(err) throw err;
    
-    connect.query("INSERT INTO users SET user_firebase_uid =?, user_email=?, user_role_type=?, shop_id=?, user_status=?",
-    [newUser.user_firebase_uid, newUser.email, newUser.user_role_type, newUser.shop_id, newUser.user_status], (err, res) => {
+    connection.query("INSERT INTO users SET user_firebase_uid =?, name=?, user_email=?, user_role_type=?, shop_id=?, user_status=?",
+    [newUser.user_firebase_uid, newUser.name, newUser.user_email, newUser.user_role_type, newUser.shop_id, newUser.user_status], (err, res) => {
       if (err) {
         console.log("error: ", err);
         result(err, null);
@@ -30,50 +30,45 @@ const User = function(user) {
   };
 
   //get all users
-  User.getAllUsers = async result => {
-    connect.getConnection((err, connection) => {
+  User.getAllUsers = async (result) => {
+    pool.getConnection((err, connection) => {
       if(err) throw err;
-    connect.query("SELECT * FROM users", (err, res) => {
+    connection.query("SELECT * FROM users", (err, res) => {
       if (err) {
         console.log("error: ", err);
         result(null, err);
         return;
       }
-  
-      console.log("users: ", res);
-      result(null, res);
+      return(res);
     });
   });
   };
 
   //get user by firebase id
-  User.findByFirebaseId = async(user_firebase_uid, result) => {
-    console.log(user_firebase_uid);
-    connect.getConnection((err, connection) => {
-      if(err) throw err;
-    connect.query(`SELECT * FROM users WHERE user_firebase_uid = ?`,[user_firebase_uid], (err, res) => {
-      if (err) {
-        console.log("error: ", err);
-        result(err, null);
-        return;
-      }
-  
-      if (res.length) {
-        result(null, res[0]);
-        return;
-      }
-  
-      // not found User with the id
-      result({ kind: "not_found" }, null);
+User.findByFirebaseId = async(user_firebase_uid) => {
+    const result = await new Promise((resolve, reject) => {
+      pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(`SELECT * FROM users WHERE user_firebase_uid = ?`,[user_firebase_uid], (customerGetErr, customerGetResult) => {
+          connection.release();
+          if (customerGetErr) {
+            reject(customerGetErr);
+          } else {
+            resolve(customerGetResult);
+          }
+        });
+      });
     });
-  });
+    return result;
   };
 
   //get user by user id
   User.findByUserId = async (user_id, result) => {
-    connect.getConnection((err, connection) => {
+    pool.getConnection((err, connection) => {
       if(err) throw err;
-    connect.query(`SELECT * FROM users WHERE user_id = ${user_id} LIMIT 1`, (err, res) => {
+    connection.query(`SELECT * FROM users WHERE user_id = ${user_id} LIMIT 1`, (err, res) => {
       if (err) {
         console.log("error: ", err);
         result(err, null);
@@ -93,36 +88,33 @@ const User = function(user) {
   };
 
   //update user
-  User.updateUserById = (id, user, result) => {
-    console.log(id)
-    connect.getConnection((err, connection) => {
+  User.updateUserById = async(id, user) => {
+    pool.getConnection((err, connection) => {
       if(err) throw err;
-    connect.query(
-      "UPDATE users SET user_email=?, user_role_type = ?, SHOP_ID = ?, user_status = ? WHERE user_firebase_uid = ?",
-      [user.email, user.user_role_type, user.shop_id, user.user_status, id],
+    connection.query(
+      "UPDATE users SET name=?, user_email=?, user_role_type = ?, SHOP_ID = ?, user_status = ? WHERE user_firebase_uid = ?",
+      [user.name, user.user_email, user.user_role_type, user.shop_id, user.user_status, id],
       (err, res) => {
         if (err) {
           console.log("error: ", err);
-          result(null, err);
-          return;
+          return err;
         }
   
         if (res.affectedRows == 0) {
           // not found User with the id
-          result({ kind: "not_found" }, null);
-          return;
+          return ({ kind: "not_found" });
         }
   
-        console.log("updated user: ", { id: id, ...user });
-        result(null, { id: id, ...user });
+        // console.log("updated user: ", { id: id, ...user });
+        return res;
       });
     });
     };
   
     User.deleteUser = async(id, result) => {
-      connect.getConnection((err, connection) => {
+      pool.getConnection((err, connection) => {
         if(err) throw err;
-      connect.query("DELETE FROM users WHERE user_firebase_uid = ?", id, (err, res) => {
+      connection.query("DELETE FROM users WHERE user_firebase_uid = ?", id, (err, res) => {
         if (err) {
           console.log("error: ", err);
           result(null, err);
