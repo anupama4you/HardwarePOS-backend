@@ -120,7 +120,6 @@ const pool = require('../models/db');
     return result;
   };
 
-
   const getBatchByIdQuery = async (batchId) => {
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {

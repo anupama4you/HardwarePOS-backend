@@ -21,6 +21,30 @@ SupplierOrder.getOrdersBySupplierId = async (supplierId) => {
     return result;
   };
 
+  SupplierOrder.getSupplyOrdersByDates = async ({
+    supplierId, fromDate, toDate
+    }, res) => {
+       
+      const fromDateF = fromDate+' 00:00:00'
+      const toDateF = toDate+' 23:59:59'
+
+    const result = await new Promise((resolve, reject) => { 
+      console.log(fromDateF)
+    pool.getConnection((err, connection) => {
+      if (err) throw err;
+      connection.query(`SELECT * from supplyorder where supplier_id = '${supplierId}' and date >= '${fromDateF}' and date <= '${toDateF}'`, (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      });
+      connection.release();
+    });
+    });
+    return result;
+  };
+
   SupplierOrder.getOrderDetailsBySupplireOrderId = async (supOrderId, res) => {
     const result = await new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {

@@ -6,6 +6,16 @@ exports.getOrdersBySupplireId = async (req, res) => {
     res.send(result);
 };
 
+exports.getSupplyOrdersByDates = async (req, res) => {
+  console.log(req.query)
+  const result = await supplierOrder.getSupplyOrdersByDates({
+    supplierId: req.query.supplierId,
+    fromDate: req.query.fromDate,
+    toDate: req.query.toDate
+  });
+  res.send(result);
+};
+
 exports.getOrderDetailsBySupplireOrderId = async (req, res) => {
   console.log(req.params.supOrderId)
     const result = await supplierOrder.getOrderDetailsBySupplireOrderId(req.params.supOrderId);

@@ -1,5 +1,6 @@
 const pool = require('../models/db')
-const Customer = require('../models/customer.model')
+const Customer = require('../models/customer.model');
+const ReturnItem = require('../models/returnItem.model');
 
 exports.addCustomer = async (req, res) => {
     const result = await Customer.addCustomerQuery(req.body);
@@ -32,6 +33,6 @@ exports.addCustomerOrder = async (req, res) => {
 };
 
 exports.getReturnDebitByCustomer = async (req, res) => {
-    const result = await Customer.getReturnDebitByCustomerQuery(req.params.customerId);
+    const result = await ReturnItem.getReturnDebitByCustomerQuery(req.params.customerId);
     res.send(result);
 };

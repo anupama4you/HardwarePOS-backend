@@ -1,5 +1,6 @@
 const pool = require('../models/db')
-const Item = require('../models/item.model')
+const Item = require('../models/item.model');
+const Payment = require('../models/payment.model');
 
 /*********Get all items */
 exports.getAllItems = async(req, res) => {
@@ -93,4 +94,58 @@ exports.getROLReachedItems = async (req, res) => {
   const result = await Item.getROLReachedItems();
   res.send(result);
 };
-  
+
+// Return item temp table
+exports.addReturnItemTemp = async (req, res) => {
+  const {
+      custOrderId, batchId, date, qty, len, cusOrderQty, status,
+    } = req.body;
+
+  pool.getConnection((err, connection) => {
+      if (err) {
+          res.status(100).send({
+              message: "Error in connection database"
+            });
+      }
+
+      connection.query(`insert into item_return_temp (cus_order_id, batch_id, date, quantity, length, cus_order_qty, order_status) values
+      ('${custOrderId}', '${batchId}', '${date}',${qty}, ${len}, ${cusOrderQty}, ${status});`, (err,data) => {
+          connection.release();
+          if (err){
+            console.log(err)
+          res.status(500).send(err);
+          }
+          else {
+          console.log(data)
+          res.status(200).send(data);
+          }
+              
+      });
+
+  });
+};
+
+// Return item temp table
+exports.getAllReturnItems = async (req, res) => {
+  pool.getConnection((err, connection) => {
+      if (err) {
+          res.status(100).send({
+              message: "Error in connection database"
+            });
+      }
+
+      connection.query(`select * from item_return_temp;`, async(err,data) => {
+          connection.release();
+          if (err){
+            console.log(err)
+          res.status(500).send(err);
+          }
+          else {
+          console.log(data)
+          res.status(200).send(data);
+          }
+              
+      });
+
+  });
+};

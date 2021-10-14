@@ -69,6 +69,7 @@ module.exports = app => {
 
     //******supply order */
     app.get('/getOrdersBySupplireId/:supplireId', supplierOrderController.getOrdersBySupplireId);
+    app.get('/getSupplyOrderByDates', supplierOrderController.getSupplyOrdersByDates);
     app.get('/getOrderDetailsBySupplireOrderId/:supOrderId', supplierOrderController.getOrderDetailsBySupplireOrderId);
     app.delete('/deleteSupplyOrder/:supplyOrderId', supplierOrderController.deleteSupplyOrder)
 
@@ -78,12 +79,17 @@ module.exports = app => {
     app.get('/getOrdersByCustomerId/:customerId/:idToken', customerOrderController.getOrdersByCustomerId);
     app.get('/getOrderDetailsByOrderId/:customerOrderId', customerOrderController.getOrderDetailsByOrderId);
     app.put('/updateOrderId', customerOrderController.updateCustomerOrderById);
+    app.get('/getCustomerOrderByDates', customerOrderController.getCustomerOrderByDates);
 
     const paymentController = require('../controllers/payment.controller');
 
     //******Payments */
     app.post('/payment', paymentController.addPayment);
+
+    //******Return items */
     app.post('/return', paymentController.addReturnItem);
+    app.post('/returnTemp', itemController.addReturnItemTemp);
+    app.get('/getReturnTemp', itemController.getAllReturnItems);
 
     const reportController = require('../controllers/report.controller')
 
@@ -96,4 +102,6 @@ module.exports = app => {
     //****Quotations*****/
     app.post('/add_quotation', quotationController.addItem);
     app.get('/get_quotation', quotationController.getAllQuotations);
+    app.get('/get_quotationFromDates', quotationController.getAllQuotationsfromDates);
+
   };

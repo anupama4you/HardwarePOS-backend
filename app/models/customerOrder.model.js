@@ -32,7 +32,7 @@ CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken) => {
     return result;
   };
 
- CustomerOrder.getOrderDetailsBySupplireOrderId = async (customerOrderId) => {
+ CustomerOrder.getOrderDetailsByCustomerOrderId = async (customerOrderId) => {
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {
         if (err) {
@@ -103,6 +103,30 @@ CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken) => {
           }
         });
       });
+    });
+    return result;
+  };
+
+  CustomerOrder.getCustomerOrdersByDates = async ({
+    customerId, fromDate, toDate
+    }, res) => {
+       
+      const fromDateF = fromDate+' 00:00:00'
+      const toDateF = toDate+' 23:59:59'
+
+    const result = await new Promise((resolve, reject) => { 
+    pool.getConnection((err, connection) => {
+      if (err) throw err;
+      connection.query(`SELECT * from customer_order where customer_idcustomer = '${customerId}' and 	customer_order_date >= '${fromDateF}' and customer_order_date <= '${toDateF}'`, (err, rows) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log(rows)
+          resolve(rows);
+        }
+      });
+      connection.release();
+    });
     });
     return result;
   };
