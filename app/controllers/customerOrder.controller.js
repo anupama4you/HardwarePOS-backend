@@ -2,7 +2,7 @@ const pool = require('../models/db')
 const customerOrder = require('../models/customerOrder.model')
 
 exports.getOrdersByCustomerId = async (req, res) => {
-    const result = await customerOrder.getOrdersByCustomerId(req.params.customerId, req.params.idToken);
+    const result = await customerOrder.getOrdersByCustomerId(req.params.customerId, req.params.idToken, req.params.user_id);
     res.send(result);
 };
 
@@ -14,6 +14,52 @@ exports.getOrderDetailsByOrderId = async (req, res) => {
 exports.updateCustomerOrderById = async (req, res) => {
     const result = await customerOrder.updateCustomerOrderById();
     res.send(result);
+};
+
+exports.updateCustomerOrderPrintedStatus = async (req, res) => {
+    const print_status = req.body.printedStatus;
+    const customerOrderId = req.body.cusOrderId;
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+          reject(err);
+        }
+        connection.query(
+          `SELECT * FROM customer_order where idcustomer_order=${customerOrderId} `,
+          (customerDeleteErr, customerDeleteResult) => {
+            connection.release();
+            if (customerDeleteErr) {
+                res.status(100).send({
+                    message: "Error in connection database"
+                  });
+            } else {
+              console.log(customerDeleteResult[0].printed ) 
+              
+              if(customerDeleteResult[0].printed == 1){
+                res.status(200).send({
+                    printed :true, data: customerDeleteResult[0]
+                  });
+              }else{
+                connection.query(
+                    `UPDATE customer_order SET printed=${print_status} where idcustomer_order=${customerOrderId} `,
+                    (customerDeleteErr, customerDeleteResult) => {
+                      if (customerDeleteErr) {
+                        res.status(100).send({
+                            message: "Error in connection database"
+                          });
+                      } else {
+                        res.status(200).send({
+                            printed :false, data: customerDeleteResult
+                          });
+                      }
+                    },
+                  );
+              }
+            }
+          },
+        );
+      
+      });
 };
 
 exports.getCustomerOrderByDates = async (req, res) => {

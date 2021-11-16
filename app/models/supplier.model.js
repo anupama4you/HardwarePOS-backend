@@ -20,7 +20,7 @@ Supplier.addSupplier = async ({
             } else {
               console.log(results);
               // eslint-disable-next-line
-              results.code = 200;
+              // results.code = 200;
               resolve(results);
             }
           },

@@ -32,6 +32,7 @@ exports.addItem = async (req, res) => {
                 ('${quotationNo}', ${customerId}, '${date}',${total}, ${orderDiscount}, ${orderStatus},${customerOrderCreditRate}, '${bacthesObj}');`, (err,data) => {
                   connection.release();
                   if (err){
+                    console.log(err);
                     res.status(500).send(err);
                   }
                   else {
@@ -45,6 +46,33 @@ exports.addItem = async (req, res) => {
         });
   
       
+    });
+  };
+
+  exports.getQuotationByNo = async(req, res) => {
+    console.log(req.params.quotationNo)
+    const quotationNo = req.params.quotationNo;
+    pool.getConnection((err, connection) => {
+      if (err) {
+          res.status(100).send({
+              message: "Error in connection database"
+            });
+      }
+      connection.query(`select * from quotation q, customer c where q.customerId = c.idcustomer and q.quotation_no = '${quotationNo}' ;`, (err, rows) => {
+        connection.release();
+        if (err)
+            res.status(500).send({
+              message:
+                err.message || "Some error occurred while retrieving items."
+            });
+          else {
+            if(rows.length == 0){
+              res.status(404).send({message: 'Quotation cannot be found'});
+            }else{
+               res.status(200).send(rows);
+            }
+          }
+      });
     });
   };
 

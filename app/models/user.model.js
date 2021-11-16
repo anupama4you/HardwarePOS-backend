@@ -46,6 +46,7 @@ const User = function(user) {
 
   //get user by firebase id
 User.findByFirebaseId = async(user_firebase_uid) => {
+  console.log(user_firebase_uid)
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {
         if (err) {

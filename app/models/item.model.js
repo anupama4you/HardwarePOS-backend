@@ -12,6 +12,7 @@ Item.editItemQuery = async ({
     item_id,
     rol,
     isDeleted,
+    customer_note
   }) => {
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {
@@ -28,7 +29,8 @@ Item.editItemQuery = async ({
           description = ?,
           subCategory_id = ?,
           rol = ?,
-          isDeleted = ?
+          isDeleted = ?,
+          customer_note = ?
           WHERE item_id = ?
           `,
           [
@@ -41,6 +43,7 @@ Item.editItemQuery = async ({
             subCategory_id,
             rol,
             isDeleted ? 1 : 0,
+            customer_note,
             // eslint-disable-next-line camelcase
             item_id,
           ],
@@ -67,7 +70,7 @@ Item.editItemQuery = async ({
           reject(err);
         }
         connection.query(
-          `select item_id,code,name,qty,length AS len,description, subCategory_id, rol, isDeleted from item
+          `select item_id,code,name,qty,length AS len,description, subCategory_id, rol, isDeleted, customer_note from item
           WHERE item_id = ?
           `,
           [
@@ -97,7 +100,7 @@ Item.editItemQuery = async ({
         }
         connection.query(
           `select i.*,b.*,FLOOR(b.qty) as qtyOnHand,
-          TRUNCATE(substring(b.qty, -2 )/100*i.length,0) as subQtyOnHand,
+          TRUNCATE(((b.qty % 1) * 100 * i.length)/100,0) as subQtyOnHand,
           s.name as subcategory_name, c.name as category_name
           from batch b, item i, category c, subcategory s
           where b.item_item_id = i.item_id and b.qty != 0
@@ -107,7 +110,6 @@ Item.editItemQuery = async ({
           (batchErr, batchResult) => {
             connection.release();
             if (batchErr) {
-              console.log(batchErr)
               reject(batchErr);
             } else {
               resolve(batchResult);

@@ -3,7 +3,7 @@ const Supplier = require("../models/supplier.model");
 module.exports = app => {
     const users = require("../controllers/user.controller");
 
-    //******users */
+    //******users */ 
     app.post("/users", users.create);
     app.get("/users", users.findAll);
     app.get("/users/:firebaseId", users.findOne);
@@ -76,10 +76,11 @@ module.exports = app => {
     const customerOrderController = require('../controllers/customerOrder.controller');
 
     //******Customer order */
-    app.get('/getOrdersByCustomerId/:customerId/:idToken', customerOrderController.getOrdersByCustomerId);
+    app.get('/getOrdersByCustomerId/:customerId/:idToken/:user_id', customerOrderController.getOrdersByCustomerId);
     app.get('/getOrderDetailsByOrderId/:customerOrderId', customerOrderController.getOrderDetailsByOrderId);
     app.put('/updateOrderId', customerOrderController.updateCustomerOrderById);
     app.get('/getCustomerOrderByDates', customerOrderController.getCustomerOrderByDates);
+    app.put('/updatePrintedStatus', customerOrderController.updateCustomerOrderPrintedStatus)
 
     const paymentController = require('../controllers/payment.controller');
 
@@ -87,9 +88,11 @@ module.exports = app => {
     app.post('/payment', paymentController.addPayment);
 
     //******Return items */
-    app.post('/return', paymentController.addReturnItem);
+    app.post('/return', itemController.addReturnItemQuery);
     app.post('/returnTemp', itemController.addReturnItemTemp);
+    app.delete('/deleteReturnTemp/:returnItemId', itemController.deleteReturnTemp);
     app.get('/getReturnTemp', itemController.getAllReturnItems);
+    app.get('/getReturnTempByPerson/:cusOrSup', itemController.getReturnItems);
 
     const reportController = require('../controllers/report.controller')
 
@@ -103,5 +106,6 @@ module.exports = app => {
     app.post('/add_quotation', quotationController.addItem);
     app.get('/get_quotation', quotationController.getAllQuotations);
     app.get('/get_quotationFromDates', quotationController.getAllQuotationsfromDates);
+    app.get('/getQuotationByNo/:quotationNo', quotationController.getQuotationByNo);
 
   };

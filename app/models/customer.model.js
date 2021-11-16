@@ -131,6 +131,7 @@ Customer.addCustomerQuery = async ({
       checqueNo,
       checqueDate,
       customerOrderCreditRate,
+      user_id
     } = supplyOrder;
     // console.log(supplyOrder);
     // save customer order
@@ -181,9 +182,9 @@ Customer.addCustomerQuery = async ({
             }
             // console.log('invNo ', invNo);
             connection.query(
-              'INSERT INTO customer_order(idcustomer_order, customer_order_date, customer_order_total, customer_order_paid, customer_idcustomer, order_discount, order_status, customer_order_credit, invoice_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              'INSERT INTO customer_order(idcustomer_order, customer_order_date, customer_order_total, customer_order_paid, customer_idcustomer, order_discount, order_status, customer_order_credit, invoice_no, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               [null, date, total, 0, customerId, orderDiscount,
-                orderStatus, customerOrderCreditRate, invNo],
+                orderStatus, customerOrderCreditRate, invNo, user_id],
               async (error, results) => {
                 if (error) {
                   return connection.rollback(() => {
@@ -197,10 +198,21 @@ Customer.addCustomerQuery = async ({
                     await new Promise((unitLengthResolve) => {
                       // eslint-disable-next-line eqeqeq
                       if (item.unitLength && item.unitLength != 0 && item.subQty != 0) {
+
+                        console.log(item.unitLength, item.subQty)
+
                         // eslint-disable-next-line no-param-reassign
-                        const v1 = ((100 / item.unitLength) * item.subQty) / 100;
+                        const percentageSubQty = ((100 / item.unitLength) * item.subQty) / 100; 
+
+                        console.log(item.unitLength, item.subQty)
+
+                        console.log(percentageSubQty)
+
                         // eslint-disable-next-line no-param-reassign
-                        item.qty = (item.qty * 1) + v1;
+                        item.qty = (item.qty * 1) + percentageSubQty;
+
+                        console.log(item.qty)
+
                         connection.query(
                           `update item i, batch b
                           set i.length = ?
@@ -208,8 +220,10 @@ Customer.addCustomerQuery = async ({
                           and b.batch_id = ?`,
                           [item.unitLength, item.batchId],
                           (errorItemLength) => {
+                            console.log(item.batchId)
                             if (errorItemLength) {
-                              connection.release();
+                              // connection.release();
+                      
                               return connection.rollback(() => {
                                 reject(error);
                               });
@@ -226,8 +240,9 @@ Customer.addCustomerQuery = async ({
                       where b.batch_id = ?`,
                       [item.batchId],
                       (errorBatchQty, resultBatchQty) => {
+                        console.log('***blah***',resultBatchQty[0].qty, item.qty)
                         if (resultBatchQty[0].qty < item.qty) {
-                          connection.release();
+                          // connection.release();
                           return connection.rollback(() => {
                             reject(item);
                           });
@@ -242,14 +257,17 @@ Customer.addCustomerQuery = async ({
                                 reject(OrderDetailerror);
                               });
                             }
-                            console.log('***start**')
+
+                            console.log('*****ANU****',item.qty)
+
                             // update batch remain qty here
                             connection.query(
                               'UPDATE batch SET qty = (qty- ?) WHERE `batch_id` =?',
                               [item.qty, item.batchId],
                               (batchUpdateerror) => {
+                                console.log('***Batch ID:',item.batchId)
                                 if (batchUpdateerror) {
-                                  connection.release();
+                                  // connection.release();
                                   return connection.rollback(() => {
                                     reject(batchUpdateerror);
                                   });
@@ -267,7 +285,7 @@ Customer.addCustomerQuery = async ({
                         );
                         
                         if (errorBatchQty) {
-                          connection.release();
+                          // connection.release();
                           return connection.rollback(() => {
                             reject(errorBatchQty);
                           });
@@ -294,7 +312,7 @@ Customer.addCustomerQuery = async ({
                           reject(errCommit);
                         });
                       }
-                      connection.release();
+                      // connection.release();
                       const customer = await Customer.getCustomerQuery(customerId);
                       const response = {
                         code: 200, status: 'Success',

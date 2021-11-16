@@ -1,4 +1,5 @@
-const pool = require('../models/db')
+const pool = require('../models/db');
+const Item = require('../models/item.model');
 const Payment = require('../models/payment.model')
 
 exports.addPayment = async (req, res) => {
@@ -6,7 +7,3 @@ exports.addPayment = async (req, res) => {
     res.send(result);
 };
 
-exports.addReturnItem = async (req, res) => {
-    const result = await Payment.addReturnItemQuery(req.body);
-    res.send(result);
-};

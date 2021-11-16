@@ -4,7 +4,7 @@ const userModel = require('../models/user.model')
 
 const CustomerOrder = function(customerorder) {};
 
-CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken) => {
+CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken, user_id) => {
     const authUser = await firebase.verifyIdToken(idToken);
     const userId = authUser;
     console.log(customerId,'8****')
@@ -14,9 +14,9 @@ CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken) => {
         if (err) {
           reject(err);
         }
-        let sql = `select * from customer_order co where co.customer_idcustomer =${customerId} `;
+        let sql = `select * from customer_order co where co.customer_idcustomer =${customerId}`;
         if (user && user[0].user_role_type && user[0].user_role_type === 2) {
-          sql += ' and co.order_status != 0 ';
+          sql += ` and co.order_status != 0 and co.user_id='${user_id}' `;
         }
         sql += ' order by co.idcustomer_order desc';
         connection.query(sql, (customerDeleteErr, customerDeleteResult) => {

@@ -68,39 +68,16 @@ exports.findOne = async(req, res) => {
     });
   }
 
-  // const user = new User({
-  //   user_firebase_uid: null,
-  //   email: null,
-  //   user_role_type: null,
-  //   shop_id: null,
-  //   user_status: null
-  // });
-
-  // await userService.getUserById(req.params.firebaseId).then(
-  //   (firebaseResponse) => {
-  //     user.email = firebaseResponse.email;
-  //   }
-  // ).catch((error) => {
-  //   res.status(500).send({
-  //     message: "Error retrieving User with id from firebase:" + req.params.firebaseId
-  //   });
-  // });
-
-  await User.findByFirebaseId(req.params.firebaseId, (err, data) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        res.status(404).send({
-          message: `Not found User with id ${req.params.firebaseId}.`
-        });
-      } else {
-        res.status(500).send({
-          message: "Error retrieving User with id " + req.params.firebaseId
-        });
-      }
+  const results = await User.findByFirebaseId(req.params.firebaseId);
+  console.log(results)
+    if (results) {
+      res.status(200).send(results);
     } else {
-        res.send(data);
+      res.status(404).send({
+        message: `Not found User with id ${req.params.firebaseId}.`
+      });
     }
-  });
+
 };
 
 // Retrieve all Users from the database.
