@@ -24,5 +24,5 @@ require("./app/routes/routes")(app);
 
 // set port, listen for requests
 app.listen(port, () => {
-    console.log("Server is running on port 3000.");
+    console.log("Server is running on port 4000.");
 });
