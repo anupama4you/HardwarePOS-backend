@@ -9,7 +9,7 @@ const port = 4000
 app.use(bodyParser.json());
 
 app.use(cors({
-    origin: 'http://localhost:3001'
+    origin: 'http://hardware-pos-prod.s3-website.ap-south-1.amazonaws.com'
 }));
 
 // parse requests of content-type: application/x-www-form-urlencoded
