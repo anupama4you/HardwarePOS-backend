@@ -85,11 +85,13 @@ Customer.addCustomerQuery = async ({
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {
         if (err) {
+          console.log(err);
           reject(err);
         }
         connection.query('SELECT * from customer', (customerGetErr, customerGetResult) => {
           connection.release();
           if (customerGetErr) {
+            
             reject(customerGetErr);
           } else {
             resolve(customerGetResult);
