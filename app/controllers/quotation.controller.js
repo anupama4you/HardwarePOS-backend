@@ -26,7 +26,7 @@ exports.addItem = async (req, res) => {
               console.log(err)
             else {
               if(row[0]){
-                quotationNo = 'QU_' + parseInt(row[0].quotation_id) + 1
+                quotationNo = 'QU_' + (parseInt(row[0].quotation_id)+1)
               }else{
                 quotationNo = 'QU_' + 1
               }
