@@ -25,7 +25,11 @@ exports.addItem = async (req, res) => {
           if (err)
               console.log(err)
             else {
-              quotationNo = 'QU_' + row[0].quotation_id
+              if(row[0].quotation_id){
+                quotationNo = 'QU_' + row[0].quotation_id
+              }else{
+                quotationNo = 'QU_' + 01
+              }
               console.log(quotationNo);
 
               connection.query(`insert into quotation (quotation_no, customerId, date, total, orderDiscount, orderStatus, customerOrderCreditRate, batches) values
