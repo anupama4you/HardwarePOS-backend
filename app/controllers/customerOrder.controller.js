@@ -29,7 +29,7 @@ exports.updateCustomerOrderPrintedStatus = async (req, res) => {
           (customerDeleteErr, customerDeleteResult) => {
             connection.release();
             if (customerDeleteErr) {
-                res.status(100).send({
+                res.status(500).send({
                     message: "Error in connection database"
                   });
             } else {
@@ -44,8 +44,8 @@ exports.updateCustomerOrderPrintedStatus = async (req, res) => {
                     `UPDATE customer_order SET printed=${print_status} where idcustomer_order=${customerOrderId} `,
                     (customerDeleteErr, customerDeleteResult) => {
                       if (customerDeleteErr) {
-                        res.status(100).send({
-                            message: "Error in connection database"
+                        res.status(500).send({
+                            message: customerDeleteErr
                           });
                       } else {
                         res.status(200).send({

@@ -7,10 +7,10 @@ const userService = require('./user.firebase')
 /**** create new user ********/
 exports.create = async (req, res) => {
 
+  try {
+    
   const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization)
   let firebaseId = null;
-
-  console.log(req.body)
 
   // Validate request
   if (!req.body) {
@@ -57,11 +57,18 @@ exports.create = async (req, res) => {
         else res.send(data);
       });
   }
+
+} catch (error) {
+  res.status(500).send({
+    message: error
+  });
+}
   
 };
 
 /**** Get one user ********/
 exports.findOne = async(req, res) => {
+  try{
   if (!req.params.firebaseId) {
     res.status(400).send({
       message: "User id is mandatory!"
@@ -77,11 +84,16 @@ exports.findOne = async(req, res) => {
         message: `Not found User with id ${req.params.firebaseId}.`
       });
     }
-
+  } catch (error) {
+    res.status(500).send({
+      message: error
+    });
+  }
 };
 
 // Retrieve all Users from the database.
 exports.findAll = async(req, res) => {
+  try{
   const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization)
 
   pool.getConnection((err, connection) => {
@@ -96,9 +108,7 @@ exports.findAll = async(req, res) => {
         connection.release();
         if (err)
             res.status(500).send({
-              message:
-                err.message || "Some error occurred while retrieving items."
-            });
+              message: err});
           else res.send(rows);
       });
     }else{
@@ -109,17 +119,30 @@ exports.findAll = async(req, res) => {
     }
 
   });
+} catch (error) {
+  res.status(500).send({
+    message: error
+  });
+}
 };
 
 const getUserRoleTypeFromToken = async(idToken) => {
+  try{
       const authUser =  await userFirebase.verifyIdToken(idToken);
       const user =  await userModel.findByFirebaseId(authUser);
       const userRole = user[0].user_role_type;
       // console.log(userRole) ; // 1 --> super admin | 2 --> Normal user
       return userRole;
+
+  } catch (error) {
+    res.status(500).send({
+      message: error
+    });
+  }
 }
 
 exports.updateByFirebaseId = async(req, res) => {
+  try{
   const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
 
     if((userRoleType) == 1){
@@ -149,9 +172,15 @@ exports.updateByFirebaseId = async(req, res) => {
           "Invalid user."
       });
     }
+  } catch (error) {
+    res.status(500).send({
+      message: error
+    });
+  }
 };
 
   exports.deleteByFirebaseId = async(req, res) => {
+    try{
     const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
 
     if((userRoleType) == 1){
@@ -189,6 +218,11 @@ exports.updateByFirebaseId = async(req, res) => {
           "Invalid user."
       });
     }
+  } catch (error) {
+    res.status(500).send({
+      message: error
+    });
+  }
   };
 
   exports.getAuth = async (req, res) => {

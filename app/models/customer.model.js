@@ -227,7 +227,7 @@ Customer.addCustomerQuery = async ({
                               // connection.release();
                       
                               return connection.rollback(() => {
-                                reject(error);
+                                reject(errorItemLength);
                               });
                             }
                             return unitLengthResolve(1);
