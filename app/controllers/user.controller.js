@@ -23,11 +23,12 @@ exports.create = async (req, res) => {
     await userService.create(req.body).then(
       (firebaseResponse) => {
         firebaseId = firebaseResponse.uid;
-        console.log(firebaseId);
       }
     ).catch((error) => {
-      console.log(error.message);
-      res.send(error.message);
+      console.log('catch',error);
+      res.status(203).send({
+        message: error.message
+      });
     });
 
   }else{
