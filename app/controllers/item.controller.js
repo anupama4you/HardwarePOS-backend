@@ -242,13 +242,13 @@ exports.deleteReturnTemp = async (req, res) => {
   console.log(itemReturnId)
   pool.getConnection((err, connection) => {
       if (err) {
-          res.status(100).send({
+          res.status(500).send({
               message: "Error in connection database"
             });
       }
 
       removeReturnItemTemp(itemReturnId, 'decline');
-      res.status(100).send({
+      res.status(200).send({
         message: "successfully declined returned item"
       });
 
@@ -340,6 +340,7 @@ const removeReturnItemTemp = (item_return_id, status)=>{
       (batchErr, batchResult) => {
         connection.release();
         if (batchErr) {
+          console.log(batchErr)
           return false;
         } else {
           return true;
