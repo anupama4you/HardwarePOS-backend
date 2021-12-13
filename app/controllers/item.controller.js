@@ -4,6 +4,7 @@ const Payment = require('../models/payment.model');
 
 /*********Get all items */
 exports.getAllItems = async(req, res) => {
+  try{
   pool.getConnection((err, connection) => {
     if (err) {
         res.status(100).send({
@@ -20,16 +21,21 @@ exports.getAllItems = async(req, res) => {
       connection.release();
       if (err)
           res.status(500).send({
-            message:
-              err.message || "Some error occurred while retrieving items."
+            message: err
           });
         else res.send(rows);
     });
   });
+} catch (error) {
+  res.status(500).send({
+    message: error
+  });
+}
 };
 
 /*********Add item */
 exports.addItem = async (item, res) => {
+  // try{
     const {
       qty,
       length,
@@ -53,8 +59,7 @@ exports.addItem = async (item, res) => {
         connection.release();
         if (err){
           res.status(500).send({
-            message:
-              err || "Some error occurred while retrieving items."
+            message: err
           });
         }
         else 
@@ -63,6 +68,11 @@ exports.addItem = async (item, res) => {
             });
     });
     });
+  // } catch (error) {
+  //   res.status(500).send({
+  //     message: error
+  //   });
+  // }
   };
 
 /*********Edit item*/
@@ -119,7 +129,9 @@ exports.addReturnItemTemp = async (req, res) => {
       (batchErr, batchResult) => {
         connection.release();
         if (batchErr) {
-          res.status(500).send(batchErr);
+          res.status(500).send({
+            message: batchErr 
+          });
         } else {
           console.log(batchResult.length)
           if(batchResult.length == 0){
@@ -132,13 +144,17 @@ exports.addReturnItemTemp = async (req, res) => {
             ('${custOrderId}', '${batchId}', '${name}', '${date}',${qty}, ${len}, ${cusOrderQty}, ${status}, '${cusOrSup}');`, (err,data) => {
                 if (err){
                   console.log(err)
-                res.status(500).send(err);
+                  res.status(500).send({
+                    message: err
+                  });
                 }
                 else {
                   // retrieve the recently inserted record
                   connection.query(`select * from item_return_temp ORDER BY item_return_id DESC LIMIT 1`, (err,data) => {
                           if (err){
-                            console.log(err)
+                            res.status(500).send({
+                              message: err
+                            });
                           }
                           else {
                             res.status(200).send({data, isDuplicate: duplicate});
@@ -171,7 +187,9 @@ exports.getAllReturnItems = async (req, res) => {
           connection.release();
           if (err){
             console.log(err)
-          res.status(500).send(err);
+            res.status(500).send({
+              message: err
+            });
           }
           else {
           // console.log(data)
@@ -206,7 +224,7 @@ exports.getReturnItems = async (req, res) => {
           connection.release();
           if (err){
             console.log(err)
-          res.status(500).send(err);
+          res.status(500).send({message : err});
           }
           else {
           // console.log(data)
@@ -224,13 +242,13 @@ exports.deleteReturnTemp = async (req, res) => {
   console.log(itemReturnId)
   pool.getConnection((err, connection) => {
       if (err) {
-          res.status(100).send({
+          res.status(500).send({
               message: "Error in connection database"
             });
       }
 
       removeReturnItemTemp(itemReturnId, 'decline');
-      res.status(100).send({
+      res.status(200).send({
         message: "successfully declined returned item"
       });
 
@@ -243,22 +261,27 @@ exports.addReturnItemQuery = async (req, res) => {
   } = req.body;
   
   const batch = await getBatchByIdQuery(batchId);
-  const result = await new Promise((resolve, reject) => {
+ 
     pool.getConnection((err, connection) => {
       if (err) {
-        reject(err);
+        res.status(500).send({
+          message: err
+        });
       }
       connection.beginTransaction(async (errTransaction) => {
-        if (errTransaction) { reject(errTransaction); }
+        if (errTransaction) { 
+          res.status(500).send({
+            message: errTransaction
+          });
+        }
         connection.query(
           `insert into item_return values(null, ${custOrderId},
             ${batchId}, '${date}', ${qty},${batch[0].selling_price * qty},
             ${batch[0].selling_price * qty})`,
           (returnItemErr, returnItemResult) => {
             if (returnItemErr) {
-              reject(returnItemErr);
-              return connection.rollback(() => {
-                reject(returnItemErr);
+              res.status(500).send({
+                message: returnItemErr
               });
               // eslint-disable-next-line eqeqeq
             } else if (status == 1) {
@@ -266,17 +289,15 @@ exports.addReturnItemQuery = async (req, res) => {
                 `update batch set qty = (qty+${qty}) where batch_id = ${batchId}`,
                 (batchUpdateErr) => {
                   if (batchUpdateErr) {
-                    reject(batchUpdateErr);
-                    return connection.rollback(() => {
-                      reject(batchUpdateErr);
+                    res.status(500).send({
+                      message: batchUpdateErr
                     });
                   }
                   // eslint-disable-next-line no-param-reassign
-                  returnItemResult.code = 200;
                   console.log(returnItemResult);
 
                   removeReturnItemTemp(returnItemId,'approve'); //remove item from temporary table
-                  return resolve(returnItemResult);
+                  res.status(200).send(returnItemResult);
                 },
               );
             } else {
@@ -286,13 +307,13 @@ exports.addReturnItemQuery = async (req, res) => {
               removeReturnItemTemp(returnItemId,'approve'); //remove item from temporary table
               
               console.log(returnItemResult);
-              return resolve(returnItemResult);
+              res.status(200).send(returnItemResult);
             }
             // commit db
             connection.commit(async (errCommit) => {
               if (errCommit) {
-                connection.rollback(() => {
-                  reject(errCommit);
+                res.status(500).send({
+                  message: errCommit
                 });
               }
               connection.release();
@@ -301,8 +322,6 @@ exports.addReturnItemQuery = async (req, res) => {
         );
       });
     });
-  });
-  res.status(200).send(result);
 };
 
 const removeReturnItemTemp = (item_return_id, status)=>{
@@ -321,6 +340,7 @@ const removeReturnItemTemp = (item_return_id, status)=>{
       (batchErr, batchResult) => {
         connection.release();
         if (batchErr) {
+          console.log(batchErr)
           return false;
         } else {
           return true;

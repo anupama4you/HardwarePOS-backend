@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors');
+require('dotenv').config()
 
 const app = express()
 const port = 4000
@@ -9,7 +10,7 @@ const port = 4000
 app.use(bodyParser.json());
 
 app.use(cors({
-    origin: 'http://localhost:3001'
+    origin: process.env.FRONT_END_URL
 }));
 
 // parse requests of content-type: application/x-www-form-urlencoded

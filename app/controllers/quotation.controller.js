@@ -17,15 +17,19 @@ exports.addItem = async (req, res) => {
 
     pool.getConnection((err, connection) => {
         if (err) {
-            res.status(100).send({
+            res.status(500).send({
                 message: "Error in connection database"
               });
         }
         connection.query(`select * from quotation ORDER BY quotation_id DESC LIMIT 1;`, (err, row) => {
           if (err)
-              console.log(err)
+            res.status(500).send({message : err});
             else {
-              quotationNo = 'QU_' + row[0].quotation_id
+              if(row[0]){
+                quotationNo = 'QU_' + (parseInt(row[0].quotation_id)+1)
+              }else{
+                quotationNo = 'QU_' + 1
+              }
               console.log(quotationNo);
 
               connection.query(`insert into quotation (quotation_no, customerId, date, total, orderDiscount, orderStatus, customerOrderCreditRate, batches) values
@@ -33,7 +37,7 @@ exports.addItem = async (req, res) => {
                   connection.release();
                   if (err){
                     console.log(err);
-                    res.status(500).send(err);
+                    res.status(500).send({message : err});
                   }
                   else {
                     console.log(data)
@@ -62,8 +66,7 @@ exports.addItem = async (req, res) => {
         connection.release();
         if (err)
             res.status(500).send({
-              message:
-                err.message || "Some error occurred while retrieving items."
+              message: err
             });
           else {
             if(rows.length == 0){
@@ -87,8 +90,7 @@ exports.addItem = async (req, res) => {
         connection.release();
         if (err)
             res.status(500).send({
-              message:
-                err.message || "Some error occurred while retrieving items."
+              message: err
             });
           else res.send(rows);
       });
@@ -113,8 +115,7 @@ exports.addItem = async (req, res) => {
         connection.release();
         if (err)
             res.status(500).send({
-              message:
-                err.message || "Some error occurred while retrieving items."
+              message: err
             });
           else res.send(rows);
       });

@@ -85,11 +85,13 @@ Customer.addCustomerQuery = async ({
     const result = await new Promise((resolve, reject) => {
       pool.getConnection((err, connection) => {
         if (err) {
+          console.log(err);
           reject(err);
         }
         connection.query('SELECT * from customer', (customerGetErr, customerGetResult) => {
           connection.release();
           if (customerGetErr) {
+            
             reject(customerGetErr);
           } else {
             resolve(customerGetResult);
@@ -159,17 +161,24 @@ Customer.addCustomerQuery = async ({
                 sql,
                 (customerOrderLastIdErr, customerOrderLastIdResult) => {
                   // console.log(sql);
-                  if (customerOrderLastIdErr) {
+                  if (customerOrderLastIdErr || customerOrderLastIdResult.length == 0) {
                     return connection.rollback(() => {
                       reject2(customerOrderLastIdErr);
                     });
                   }
-                  if (!customerOrderLastIdResult[0].idcustomer_order) {
+                  try {
+                    
+                  if (customerOrderLastIdResult && !customerOrderLastIdResult[0].idcustomer_order) {
                     resolve2(1);
                   } else {
                     let lastNo = customerOrderLastIdResult[0].invoice_no.substring(3);
                     // console.log('lastNo ', lastNo);
                     resolve2(++lastNo);
+                  }
+                } catch (error) {
+                  return connection.rollback(() => {
+                    reject(error);
+                  });
                   }
                 }
               );
@@ -225,7 +234,7 @@ Customer.addCustomerQuery = async ({
                               // connection.release();
                       
                               return connection.rollback(() => {
-                                reject(error);
+                                reject(errorItemLength);
                               });
                             }
                             return unitLengthResolve(1);

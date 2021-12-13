@@ -132,6 +132,7 @@ Supplier.addSupplier = async ({
           connection.beginTransaction((err) => {
             connection.query(`INSERT INTO supplyorder( date, supplier_id)
               VALUES ('${date}', ${supplireId})`, (error, results) => {
+                console.log('******',results)
               if (error) {
                 return connection.rollback(() => {
                   reject(error);
@@ -146,6 +147,7 @@ Supplier.addSupplier = async ({
                 });
               }
               for (let i = 0; i < items.length; i++) {
+                console.log('XXXX')
                 if (!parseInt(items[i].qty)) {
                   return connection.rollback(() => {
                     resolve({ status: 100, message: 'item qty must in double' });
@@ -162,7 +164,6 @@ Supplier.addSupplier = async ({
                     }
                     if (matchingBatches.length > 0) {
                       // found previous batch and update qty of this
-                      console.log(items[i].supplyOrderNote)
                       connection.query(
                         `UPDATE batch SET qty=(qty+?), supply_order_note=? WHERE batch_id = ?`,
                         [items[i].qty, items[i].supplyOrderNote, matchingBatches[0].batch_id] ,
@@ -203,13 +204,14 @@ Supplier.addSupplier = async ({
                         `INSERT INTO batch(batch_id, buying_price, selling_price,
                           qty, item_item_id, supply_order_note)
                           VALUES (null, ${items[i].buyPrice}, ${items[i].sellPrice},
-                             ${items[i].qty}, ${items[i].id}, ${items[i].supplyOrderNote} )`,
+                             ${items[i].qty}, ${items[i].id}, '${items[i].supplyOrderNote}' )`,
                         (addBatchError, addBatchRes) => {
                           if (addBatchError) {
                             return connection.rollback(() => {
                               reject(addBatchError);
                             });
                           }
+                          
                           connection.query(
                             `INSERT INTO supplyorder_has_batch
                             VALUES (${results.insertId},${addBatchRes.insertId},${items[i].qty})`,
