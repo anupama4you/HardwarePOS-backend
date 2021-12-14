@@ -167,7 +167,7 @@ Customer.addCustomerQuery = async ({
                     });
                   }
                     
-                  if (customerOrderLastIdResult && !customerOrderLastIdResult[0].idcustomer_order) {
+                  if (customerOrderLastIdResult && !customerOrderLastIdResult[0]) {
                     resolve2(1);
                   } else {
                     let lastNo = customerOrderLastIdResult[0].invoice_no.substring(3);
