@@ -1,6 +1,6 @@
 module.exports = {
   HOST: "localhost",
-  USER: "admin",
+  USER: "root",
   PASSWORD: "admin123",
-  DB: "hardwarepos"
+  DB: "hardware_pos"
 };
