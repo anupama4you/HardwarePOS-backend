@@ -20,8 +20,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // app.get("/", (req, res) => {
 //     res.json({ message: "Welcome to bezkoder application." });
 // });
+try {
+    require("./app/routes/routes")(app);
+} catch (error) {
+    console.log(error);
+}
 
-require("./app/routes/routes")(app);
 
 // set port, listen for requests
 app.listen(port, () => {

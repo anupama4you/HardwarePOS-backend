@@ -7,6 +7,10 @@ const connect = mysql.createPool({
     user: dbConfig.USER,
     password: dbConfig.PASSWORD,
     database: dbConfig.DB
+    // host: process.env.HOST,
+    // user: process.env.USER,
+    // password: process.env.PASSWORD,
+    // database: process.env.DB
 });
 
 // // open the MySQL connection
