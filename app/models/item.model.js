@@ -1,26 +1,26 @@
-const pool = require('../models/db');
+const pool = require("../models/db");
 
-const Item = function(item) {};
+const Item = function (item) {};
 
 Item.editItemQuery = async ({
-    code,
-    name,
-    qty,
-    length,
-    description,
-    subCategory_id,
-    item_id,
-    rol,
-    isDeleted,
-    customer_note
-  }) => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `UPDATE item
+	code,
+	name,
+	qty,
+	length,
+	description,
+	subCategory_id,
+	item_id,
+	rol,
+	isDeleted,
+	customer_note,
+}) => {
+	const result = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`UPDATE item
           SET
           code = ?,
           name = ?,
@@ -33,73 +33,71 @@ Item.editItemQuery = async ({
           customer_note = ?
           WHERE item_id = ?
           `,
-          [
-            code,
-            name,
-            qty,
-            length,
-            description,
-            // eslint-disable-next-line camelcase
-            subCategory_id,
-            rol,
-            isDeleted ? 1 : 0,
-            customer_note,
-            // eslint-disable-next-line camelcase
-            item_id,
-          ],
-          (customerAddErr, customerAddResult) => {
-            connection.release();
-            if (customerAddErr) {
-              resolve(customerAddErr);
-            } else {
-              // eslint-disable-next-line
-              customerAddResult.code = 200;
-              resolve(customerAddResult);
-            }
-          },
-        );
-      });
-    });
-    return result;
-  };
+				[
+					code,
+					name,
+					qty,
+					length,
+					description,
+					// eslint-disable-next-line camelcase
+					subCategory_id,
+					rol,
+					isDeleted ? 1 : 0,
+					customer_note,
+					// eslint-disable-next-line camelcase
+					item_id,
+				],
+				(customerAddErr, customerAddResult) => {
+					connection.release();
+					if (customerAddErr) {
+						resolve(customerAddErr);
+					} else {
+						// eslint-disable-next-line
+						customerAddResult.code = 200;
+						resolve(customerAddResult);
+					}
+				}
+			);
+		});
+	});
+	return result;
+};
 
-  Item.getItemByIdQuery = async (item_id) => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select item_id,code,name,qty,length AS len,description, subCategory_id, rol, isDeleted, customer_note from item
+Item.getItemByIdQuery = async (item_id) => {
+	const result = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`select item_id,code,name,qty,length AS len,description, subCategory_id, rol, isDeleted, customer_note from item
           WHERE item_id = ?
           `,
-          [
-            item_id,
-          ],
-          (customerAddErr, customerAddResult) => {
-            connection.release();
-            if (customerAddErr) {
-              resolve(customerAddErr);
-            } else {
-              // eslint-disable-next-line
-              customerAddResult.code = 200;
-              resolve(customerAddResult);
-            }
-          },
-        );
-      });
-    });
-    return result;
-  };
+				[item_id],
+				(customerAddErr, customerAddResult) => {
+					connection.release();
+					if (customerAddErr) {
+						resolve(customerAddErr);
+					} else {
+						// eslint-disable-next-line
+						customerAddResult.code = 200;
+						resolve(customerAddResult);
+					}
+				}
+			);
+		});
+	});
+	return result;
+};
 
-  Item.getStockWithBatchesQuery = async () => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select i.*,b.*,FLOOR(b.qty) as qtyOnHand,
+Item.getStockWithBatchesQuery = async () => {
+	const result = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`select i.*,b.*,FLOOR(b.qty) as qtyOnHand,
           TRUNCATE(((b.qty % 1) * 100 * i.length)/100,0) as subQtyOnHand,
           s.name as subcategory_name, c.name as category_name
           from batch b, item i, category c, subcategory s
@@ -107,52 +105,52 @@ Item.editItemQuery = async ({
           and i.subCategory_id = s.subCat_id
           and s.category_id = c.cat_id
           ;`,
-          (batchErr, batchResult) => {
-            connection.release();
-            if (batchErr) {
-              reject(batchErr);
-            } else {
-              resolve(batchResult);
-            }
-          },
-        );
-      });
-    });
-    return result;
-  };
+				(batchErr, batchResult) => {
+					connection.release();
+					if (batchErr) {
+						reject(batchErr);
+					} else {
+						resolve(batchResult);
+					}
+				}
+			);
+		});
+	});
+	return result;
+};
 
-  Item.getLatestPriceByItemIdQuery = async (itemId) => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `SELECT * FROM batch b where b.item_item_id = ? order by b.batch_id desc limit 1
-          `, [itemId],
-          (batchErr, batchResult) => {
-            connection.release();
-            if (batchErr) {
-              reject(batchErr);
-            } else {
-              console.log(batchResult)
-              resolve(batchResult);
-            }
-          },
-        );
-      });
-    });
-    return result;
-  };
+Item.getLatestPriceByItemIdQuery = async (itemId) => {
+	const result = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`SELECT * FROM batch b where b.item_item_id = ? order by b.batch_id desc limit 1
+          `,
+				[itemId],
+				(batchErr, batchResult) => {
+					connection.release();
+					if (batchErr) {
+						reject(batchErr);
+					} else {
+						resolve(batchResult);
+					}
+				}
+			);
+		});
+	});
+	return result;
+};
 
-  Item.getItemTransactionHistoryQuery = async (item_id) => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `SELECT
+Item.getItemTransactionHistoryQuery = async (item_id) => {
+	const result = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`SELECT
           sup.name as name,
           s.order_Id as id, batch_batch_id, 'supplier' as type , s.date as date
           , i.name as item, sob.supplyorder_has_batch__qty as quantity
@@ -171,7 +169,7 @@ Item.editItemQuery = async ({
           where cob.batch_batch_id = b.batch_id
           and b.item_item_id = i.item_id
           and co.idcustomer_order = cob.customer_order_idcustomer_order
-          and cus.idcustomer = co.idcustomer_order  
+          and cus.idcustomer = co.idcustomer_order
           and i.item_id = ${item_id}
           UNION
           SELECT
@@ -185,24 +183,24 @@ Item.editItemQuery = async ({
           and i.item_id = ${item_id}
           order by date
           ;`,
-          (batchErr, batchResult) => {
-            connection.release();
-            if (batchErr) {
-              reject(batchErr);
-            } else {  
-              resolve(batchResult);
-            }
-          },
-        );
-      });
-    });
-    const result2 = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select
+				(batchErr, batchResult) => {
+					connection.release();
+					if (batchErr) {
+						reject(batchErr);
+					} else {
+						resolve(batchResult);
+					}
+				}
+			);
+		});
+	});
+	const result2 = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`select
           (
           SELECT
           sum(sob.supplyorder_has_batch__qty)
@@ -252,31 +250,31 @@ Item.editItemQuery = async ({
           and i.item_id = ${item_id}
           ) as balance
           ;`,
-          (batchErr, batchResult) => {
-            connection.release();
-            if (batchErr) {
-              reject(batchErr);
-            } else {
-              resolve(batchResult);
-            }
-          },
-        );
-      });
-    });
-    return {
-      summery: result2,
-      history: result
-    };
-  };
+				(batchErr, batchResult) => {
+					connection.release();
+					if (batchErr) {
+						reject(batchErr);
+					} else {
+						resolve(batchResult);
+					}
+				}
+			);
+		});
+	});
+	return {
+		summery: result2,
+		history: result,
+	};
+};
 
-  Item.getROLReachedItems = async (res) => {
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select item.item_id, item.code, item.name, item.qty, item.length, item.description,
+Item.getROLReachedItems = async (res) => {
+	const result = await new Promise((resolve, reject) => {
+		pool.getConnection((err, connection) => {
+			if (err) {
+				reject(err);
+			}
+			connection.query(
+				`select item.item_id, item.code, item.name, item.qty, item.length, item.description,
             subcategory.name as subcategory_name, category.name as category_name,
             (select sum(FLOOR(b.qty)) from batch b where b.item_item_id = item.item_id and b.qty != 0 ) as qtyOnHand,
             (select TRUNCATE(sum(substring(b.qty, -2 ))/100*item.length,0) from batch b where b.item_item_id = item.item_id and b.qty != 0 ) as subQtyOnHand
@@ -286,20 +284,20 @@ Item.editItemQuery = async ({
             and item.rol >= (select sum(b.qty) from batch b where b.item_item_id = item.item_id and b.qty != 0 )
             ;
           `,
-          (getROLReachedItemsErr, getROLReachedItemsResult) => {
-            connection.release();
-            if (getROLReachedItemsErr) {
-              resolve(getROLReachedItemsErr);
-            } else {
-              // eslint-disable-next-line
-              getROLReachedItemsResult.code = 200;
-              resolve(getROLReachedItemsResult);
-            }
-          },
-        );
-      });
-    });
-    return result;
-  };
+				(getROLReachedItemsErr, getROLReachedItemsResult) => {
+					connection.release();
+					if (getROLReachedItemsErr) {
+						resolve(getROLReachedItemsErr);
+					} else {
+						// eslint-disable-next-line
+						getROLReachedItemsResult.code = 200;
+						resolve(getROLReachedItemsResult);
+					}
+				}
+			);
+		});
+	});
+	return result;
+};
 
-  module.exports = Item; 
+module.exports = Item;
