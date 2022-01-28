@@ -183,7 +183,7 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
           from customer_order co, customer c, users u
           where co.customer_order_date >= '${fromDate}' and co.customer_order_date <= '${toDate} 23:59:59'
           and co.customer_order_total <= co.customer_order_paid
-          and co.customer_idcustomer =c.idcustomer 
+          and co.customer_idcustomer =c.idcustomer
           and co.user_id = u.user_firebase_uid`;
           if (userRole === 2) {
             sql += ' and co.order_status != 0 ';
@@ -195,21 +195,21 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
           from customer_order co, customer c, users u
           where co.customer_order_date >= '${fromDate}' and co.customer_order_date <= '${toDate} 23:59:59'
           and co.customer_order_total > co.customer_order_paid
-          and co.customer_idcustomer =c.idcustomer 
+          and co.customer_idcustomer =c.idcustomer
           and co.user_id = u.user_firebase_uid`;
           if (userRole === 2) {
             sql += ' and co.order_status != 0 ';
           }
         }
         if (type == 3) {
-          sql += `SELECT 
+          sql += `SELECT
           so.date as order_date, s.name, so.order_id
           from supplyorder so, supplier s
           where so.date >= '${fromDate}' and so.date <= '${toDate} 23:59:59'
           and so.supplier_id = s.supplier_id `;
         }
         if (type == 4) {
-          sql += `SELECT 
+          sql += `SELECT
           ir.item_return_date as returned_date, c.customer_name as customer, u.name as user, ir.return_value as returned_amount
           FROM item_return ir, customer_order co, customer c, users u
           where ir.item_return_date >= '${fromDate}' and ir.item_return_date <= '${toDate} 23:59:59'
@@ -247,7 +247,7 @@ fromDate, toDate, type, idToken,
     const reportDetail = await Report.getReportDetailQuery(fromDate, toDate, type, userRole);
     return (reportDetail);
 };
-  
+
 
 module.exports = Report;
 

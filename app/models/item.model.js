@@ -1,4 +1,4 @@
-const pool = require('../models/db');
+const pool = require('../../db_config/db');
 
 const Item = function(item) {};
 
@@ -171,7 +171,7 @@ Item.editItemQuery = async ({
           where cob.batch_batch_id = b.batch_id
           and b.item_item_id = i.item_id
           and co.idcustomer_order = cob.customer_order_idcustomer_order
-          and cus.idcustomer = co.idcustomer_order  
+          and cus.idcustomer = co.idcustomer_order
           and i.item_id = ${item_id}
           UNION
           SELECT
@@ -189,7 +189,7 @@ Item.editItemQuery = async ({
             connection.release();
             if (batchErr) {
               reject(batchErr);
-            } else {  
+            } else {
               resolve(batchResult);
             }
           },
@@ -302,4 +302,4 @@ Item.editItemQuery = async ({
     return result;
   };
 
-  module.exports = Item; 
+  module.exports = Item;
