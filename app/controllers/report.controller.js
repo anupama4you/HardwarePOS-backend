@@ -1,4 +1,4 @@
-const pool = require('../models/db')
+const pool = require('../../db_config/db')
 const Report = require('../models/report.model')
 
 exports.getReportStatictics = async (req, res) => {

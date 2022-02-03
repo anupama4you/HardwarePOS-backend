@@ -1,4 +1,4 @@
-const pool = require('../models/db')
+const pool = require('../../db_config/db')
 const Supplier = require('../models/supplier.model')
 
 exports.addSupplier = async (req, res) => {
@@ -17,7 +17,7 @@ exports.getSupplier = async (req, res) => {
 };
 
 exports.getSupplierByName = async (req, res) => {
-    const result = await Supplier.getSupplierByName(req.params.supplireName);
+    const result = await Supplier.getSupplierByName(req.params.supplierName);
     res.send(result);
 };
 
@@ -39,7 +39,7 @@ exports.addSupplyOrder = async (req, res) => {
           message: 'please provide valid parameters'
         });
         return;
-      } else if (!req.body.supplireId || !req.body.date || !req.body.items) {
+      } else if (!req.body.supplierId || !req.body.date || !req.body.items) {
         res.send({
           code: 100,
           message: 'please provide valid parameters'

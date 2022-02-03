@@ -1,29 +1,23 @@
-const pool = require('./db');
+const sql = require('../../db_config/db');
 
 const ReturnItem = function(returnItem) {};
 
 ReturnItem.getReturnDebitByCustomerQuery = async (customerId) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select sum(ir.debit_balance) as debit
-          from customer_order co, item_return ir
-          where ir.customer_order_has_batch_customer_order_idcustomer_order = co.idcustomer_order
-          and co.customer_idcustomer =${customerId}
-          and ir.debit_balance != 0`,
-          (returnDebitErr, returnDebitResult) => {
-            connection.release();
-            if (returnDebitErr) {
-              reject(returnDebitErr);
-            } else {
-              resolve(returnDebitResult);
-            }
-          },
-        );
-      });
+      sql.query(
+        `select sum(ir.debit_balance) as debit
+        from customer_order co, item_return ir
+        where ir.customer_order_has_batch_customer_order_idcustomer_order = co.idcustomer_order
+        and co.customer_idcustomer =${customerId}
+        and ir.debit_balance != 0`,
+        (err, res) => {
+          if (err) {
+            throw err;
+          } else {
+            resolve(res);
+          }
+        },
+      );
     });
     return result;
   };

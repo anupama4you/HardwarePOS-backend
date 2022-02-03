@@ -1,21 +1,16 @@
-const pool = require('../models/db');
+const { isError } = require('@sentry/utils');
+const sql = require('../../db_config/db');
 
 const SupplierOrder = function(supplierOrder) {};
 
 SupplierOrder.getOrdersBySupplierId = async (supplierId) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
+      sql.query(`SELECT * FROM supplyorder WHERE supplier_id = ${supplierId}`, (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
+        } else {
+          resolve(res);
         }
-        connection.query(`SELECT * FROM supplyorder WHERE supplier_id = ${supplierId}`, (customerGetErr, customerGetResult) => {
-          connection.release();
-          if (customerGetErr) {
-            reject(customerGetErr);
-          } else {
-            resolve(customerGetResult);
-          }
-        });
       });
     });
     return result;
@@ -30,38 +25,30 @@ SupplierOrder.getOrdersBySupplierId = async (supplierId) => {
 
     const result = await new Promise((resolve, reject) => { 
       console.log(fromDateF)
-    pool.getConnection((err, connection) => {
-      if (err) throw err;
-      connection.query(`SELECT * from supplyorder where supplier_id = '${supplierId}' and date >= '${fromDateF}' and date <= '${toDateF}'`, (err, rows) => {
+      sql.query(`SELECT * from supplyorder where supplier_id = '${supplierId}' and date >= '${fromDateF}' and date <= '${toDateF}'`, (err, rows) => {
         if (err) {
-          reject(err);
+          throw err;
         } else {
           resolve(rows);
         }
       });
-      connection.release();
-    });
     });
     return result;
   };
 
-  SupplierOrder.getOrderDetailsBySupplireOrderId = async (supOrderId, res) => {
+  SupplierOrder.getOrderDetailsBySupplierOrderId = async (supOrderId, res) => {
     const result = await new Promise((resolve, reject) => {
-    pool.getConnection((err, connection) => {
-      if (err) throw err;
-      connection.query(`SELECT shb.*,b.buying_price,b.selling_price,i.code,i.description,i.name
+      sql.query(`SELECT shb.*,b.buying_price,b.selling_price,i.code,i.description,i.name
         FROM supplyorder_has_batch shb, batch b, item i
         WHERE supplyorder_order_Id = ${supOrderId}
         and shb.batch_batch_id=b.batch_id
-        and b.item_item_id = i.item_id `, (err, rows) => {
+        and b.item_item_id = i.item_id `, (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
         } else {
-          resolve(rows);
+          resolve(res);
         }
       });
-      connection.release();
-    });
     });
     return result;
   };
@@ -88,7 +75,7 @@ SupplierOrder.getOrdersBySupplierId = async (supplierId) => {
                 return connection.rollback(() => {
                   resolve({
                     code: 100,
-                    message: 'supplire order must contain items'
+                    message: 'supplier order must contain items'
                   });
                 });
               }

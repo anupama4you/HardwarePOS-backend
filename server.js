@@ -8,12 +8,12 @@ const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
 
 // setup database
-db = mysql.createConnection({
-	host: process.env.HOST,
-	user: process.env.USER,
-	password: process.env.PASSWORD,
-	database: process.env.DB,
-});
+// db = mysql.createConnection({
+// 	host: process.env.HOST,
+// 	user: process.env.USER,
+// 	password: process.env.PASSWORD,
+// 	database: process.env.DB,
+// });
 
 // make server object that contain port property and the value for our server.
 var server = {
@@ -21,11 +21,14 @@ var server = {
 };
 
 // use the modules
-app.use(
-	cors({
-		origin: process.env.FRONT_END_URL,
-	})
-);
+// app.use(
+// 	cors({
+// 		//origin: process.env.FRONT_END_URL,
+// 		origin: "*"
+// 	})
+// );
+app.use(cors());
+
 app.use(bodyParser.json());
 
 Sentry.init({
@@ -51,7 +54,7 @@ app.use(Sentry.Handlers.requestHandler());
 app.use(Sentry.Handlers.tracingHandler());
 
 //All handlers
-// require("./app/routes/routes")(app);
+require("./app/routes/routes")(app);
 
 // starting the server
 app.listen(server.port, () =>

@@ -1,4 +1,4 @@
-const pool = require('../models/db');
+const pool = require('../../db_config/db');
 const firebase = require('../controllers/user.firebase')
 const userModel = require('../models/user.model')
 

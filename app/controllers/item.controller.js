@@ -1,36 +1,21 @@
-const pool = require('../models/db')
 const Item = require('../models/item.model');
 const Payment = require('../models/payment.model');
+const sql = require('../../db_config/db');
 
 /*********Get all items */
 exports.getAllItems = async(req, res) => {
-  try{
-  pool.getConnection((err, connection) => {
-    if (err) {
-        res.status(100).send({
-            message: "Error in connection database"
-          });
-    }
-    connection.query(`select item.item_id, item.code, item.name, item.qty, item.length, item.description, item.isDeleted,
-      subcategory.name as subcategory_name, category.name as category_name,
-      (select sum(FLOOR(b.qty)) from batch b where b.item_item_id = item.item_id) as qtyOnHand,
-      (select TRUNCATE(sum(substring(b.qty, -2 ))/100*item.length,0) from batch b where b.item_item_id = item.item_id) as subQtyOnHand
-      from category,
-      item inner join subcategory where item.subCategory_id = subcategory.subCat_id and
-      subcategory.category_id = category.cat_id;`, (err, rows) => {
-      connection.release();
-      if (err)
-          res.status(500).send({
-            message: err
-          });
-        else res.send(rows);
-    });
+
+  sql.query(`select item.item_id, item.code, item.name, item.qty, item.length, item.description, item.isDeleted,
+  subcategory.name as subcategory_name, category.name as category_name,
+  (select sum(FLOOR(b.qty)) from batch b where b.item_item_id = item.item_id) as qtyOnHand,
+  (select TRUNCATE(sum(substring(b.qty, -2 ))/100*item.length,0) from batch b where b.item_item_id = item.item_id) as subQtyOnHand
+  from category,
+  item inner join subcategory where item.subCategory_id = subcategory.subCat_id and
+  subcategory.category_id = category.cat_id;`,  (error, results, fields) => {
+    if (error) throw error;
+    res.send(results);
   });
-} catch (error) {
-  res.status(500).send({
-    message: error
-  });
-}
+
 };
 
 /*********Add item */
@@ -47,32 +32,13 @@ exports.addItem = async (item, res) => {
 
     console.log(item.body)
 
-    pool.getConnection((err, connection) => {
-        if (err) {
-            res.status(100).send({
-                message: "Error in connection database"
-              });
-        }
-  
-      connection.query(`insert into item (code, name, qty, length, description, subCategory_id) values
-      ('${itemcode}', '${itemname}',${qty}, ${length}, '${itemdesc}',${subCategory_id});`, (err) => {
-        connection.release();
-        if (err){
-          res.status(500).send({
-            message: err
-          });
-        }
-        else 
-            res.status(200).send({
-                message: "Successfully added items"
-            });
+    sql.query(`insert into item (code, name, qty, length, description, subCategory_id) values
+    ('${itemcode}', '${itemname}',${qty}, ${length}, '${itemdesc}',${subCategory_id});`, (error) => {
+      if (error) throw error;
+      res.status(200).send({
+        message: "Successfully added item"
+      });
     });
-    });
-  // } catch (error) {
-  //   res.status(500).send({
-  //     message: error
-  //   });
-  // }
   };
 
 /*********Edit item*/

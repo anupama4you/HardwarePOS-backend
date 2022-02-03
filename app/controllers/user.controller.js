@@ -1,8 +1,8 @@
-const User = require('../models/user.model.js')
-const pool = require('../models/db')
+const User = require('../models/user.model.js');
+const sql = require('../../db_config/db');
 const userFirebase = require('../controllers/user.firebase');
-const userModel = require('../models/user.model')
-const userService = require('./user.firebase')
+const userModel = require('../models/user.model');
+const userService = require('./user.firebase');
 
 /**** create new user ********/
 exports.create = async (req, res) => {
@@ -181,49 +181,50 @@ exports.updateByFirebaseId = async(req, res) => {
 };
 
   exports.deleteByFirebaseId = async(req, res) => {
+    console.log('here');
     try{
-    const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
+      const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
 
-    if((userRoleType) == 1){
-    // Validate Request
-      if (!req.params.firebaseId) {
-        res.status(400).send({
-          message: "User ID cannot be empty!"
+      if((userRoleType) == 1){
+      // Validate Request
+        if (!req.params.firebaseId) {
+          res.status(400).send({
+            message: "User ID cannot be empty!"
+          });
+        }
+
+        await User.deleteUser(req.params.firebaseId, (err, data) => {
+          if (err) {
+            if (err.kind === "not_found") {
+              res.status(404).send('Not Found')
+            } else {
+              res.send("Error retrieving User")
+            }
+          } else {
+              console.log('successfully deleted user from DB');
+          }
+        });
+
+            await userService.deleteByFirebaseId(req.params.firebaseId).then(
+              (firebaseResponse) => {
+                res.send(firebaseResponse);
+              }
+            ).catch((error) => {
+              console.log(error)
+              res.send(error);
+            });
+
+      }else{
+        res.status(500).send({
+          message:
+            "Invalid user."
         });
       }
-
-      await User.deleteUser(req.params.firebaseId, (err, data) => {
-        if (err) {
-          if (err.kind === "not_found") {
-            res.status(404).send('Not Found')
-          } else {
-            res.send("Error retrieving User")
-          }
-        } else {
-            console.log('successfully deleted user from DB');
-        }
-      });
-
-          await userService.deleteByFirebaseId(req.params.firebaseId).then(
-            (firebaseResponse) => {
-              res.send(firebaseResponse);
-            }
-          ).catch((error) => {
-            console.log(error)
-            res.send(error);
-          });
-
-    }else{
+    } catch (err) {
       res.status(500).send({
-        message:
-          "Invalid user."
+        message: err
       });
     }
-  } catch (error) {
-    res.status(500).send({
-      message: error
-    });
-  }
   };
 
   exports.getAuth = async (req, res) => {

@@ -1,22 +1,16 @@
-const pool = require('../../db_config/db');
+const sql = require('../../db_config/db');
 
 const Category = function(category) {};
 
 Category.getAllCategories = async () => {
     const result = await new Promise((resolve, reject) => {
-        pool.getConnection((err, connection) => {
+      sql.query('select * from category;', (err, res) => {
         if (err) {
-            reject(err);
+          throw err;
+        } else {
+          resolve(res);
         }
-        connection.query('select * from category;', (customerGetErr, customerGetResult) => {
-            connection.release();
-            if (customerGetErr) {
-            reject(customerGetErr);
-            } else {
-            resolve(customerGetResult);
-            }
-        });
-        });
+      });
     });
     return result;
 };
@@ -25,25 +19,18 @@ Category.addCategory = async ({
     catName
   }) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
+      sql.query(
+        `insert into category (name) values ('${catName}');`,
+      (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
+        } else {
+          console.log(res);
+          res.code = 200;
+          resolve(res);
         }
-        connection.query(
-            `insert into category (name) values ('${catName}');`,
-          (customerAddErr, customerAddResult) => {
-            connection.release();
-            if (customerAddErr) {
-              resolve(customerAddErr);
-            } else {
-              console.log(customerAddResult);
-              // eslint-disable-next-line
-              customerAddResult.code = 200;
-              resolve(customerAddResult);
-            }
-          },
-        );
-      });
+      },
+    );
     });
     return result;
   };

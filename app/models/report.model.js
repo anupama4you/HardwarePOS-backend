@@ -1,5 +1,5 @@
 const userFirebase = require('../controllers/user.firebase');
-const pool = require('../models/db');
+const pool = require('../../db_config/db');
 const userModel = require('../models/user.model')
 
 const Report = function(report) {};
@@ -125,13 +125,13 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
         `;
         connection.query(
           sql,
-          (supplireOrderSummeryErr, supplireOrderSummeryResult) => {
+          (supplierOrderSummeryErr, supplierOrderSummeryResult) => {
             connection.release();
             console.log(sql);
-            if (supplireOrderSummeryErr) {
-              reject(supplireOrderSummeryErr);
+            if (supplierOrderSummeryErr) {
+              reject(supplierOrderSummeryErr);
             } else {
-              resolve(supplireOrderSummeryResult);
+              resolve(supplierOrderSummeryResult);
             }
           },
         );

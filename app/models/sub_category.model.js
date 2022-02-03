@@ -1,24 +1,18 @@
-const pool = require('../models/db');
+const sql = require('../../db_config/db');
 
 const SubCategory = function(category) {};
 
 SubCategory.getSubCategory = async (catId) => {
     console.log(catId)
     const result = await new Promise((resolve, reject) => {
-        pool.getConnection((err, connection) => {
-        if (err) {
-            reject(err);
-        }
-        connection.query(`select * from subcategory where category_id = '${catId}';`, 
-        (customerGetErr, customerGetResult) => {
-            connection.release();
-            if (customerGetErr) {
-            reject(customerGetErr);
-            } else {
-            resolve(customerGetResult);
-            }
-        });
-        });
+      sql.query(`select * from subcategory where category_id = '${catId}';`, 
+      (err, res) => {
+          if (err) {
+          throw err;
+          } else {
+          resolve(res);
+          }
+      });
     });
     return result;
 };
@@ -27,25 +21,19 @@ SubCategory.addsubCategory = async (
     name, cat_id
   ) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
+      sql.query(
+        `insert into subcategory (name, category_id) values ('${name}', ${cat_id});`,
+      (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
+        } else {
+          console.log(res);
+          // eslint-disable-next-line
+          res.code = 200;
+          resolve(res);
         }
-        connection.query(
-            `insert into subcategory (name, category_id) values ('${name}', ${cat_id});`,
-          (customerAddErr, customerAddResult) => {
-            connection.release();
-            if (customerAddErr) {
-              resolve(customerAddErr);
-            } else {
-              console.log(customerAddResult);
-              // eslint-disable-next-line
-              customerAddResult.code = 200;
-              resolve(customerAddResult);
-            }
-          },
-        );
-      });
+      },
+    );
     });
     return result;
   };

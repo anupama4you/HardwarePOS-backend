@@ -1,4 +1,4 @@
-const pool = require('../models/db');
+const sql = require('../../db_config/db');
 
 // constructor
 const User = function(user) {
@@ -46,24 +46,33 @@ const User = function(user) {
 
   //get user by firebase id
 User.findByFirebaseId = async(user_firebase_uid) => {
-  console.log(user_firebase_uid)
-    const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(`SELECT * FROM users WHERE user_firebase_uid = ?`,[user_firebase_uid], (customerGetErr, customerGetResult) => {
-          connection.release();
-          if (customerGetErr) {
-            reject(customerGetErr);
-          } else {
-            resolve(customerGetResult);
-          }
-        });
-      });
+  console.log(user_firebase_uid);
+  const result = await new Promise((resolve, reject) => {
+    sql.query(`SELECT * FROM users WHERE user_firebase_uid = ?`,
+      [user_firebase_uid], (customerGetErr, customerGetResult) => {
+      if (customerGetErr) {
+        throw customerGetErr;
+      } else {
+        resolve(customerGetResult);
+      }
+
+    // pool.getConnection((err, connection) => {
+    //   if (err) {
+    //     reject(err);
+    //   }
+    //   connection.query(`SELECT * FROM users WHERE user_firebase_uid = ?`,[user_firebase_uid], (customerGetErr, customerGetResult) => {
+    //     connection.release();
+    //     if (customerGetErr) {
+    //       reject(customerGetErr);
+    //     } else {
+    //       resolve(customerGetResult);
+    //     }
+    //   });
+    // });
     });
     return result;
-  };
+  });
+};
 
   //get user by user id
   User.findByUserId = async (user_id, result) => {
@@ -113,25 +122,40 @@ User.findByFirebaseId = async(user_firebase_uid) => {
     };
   
     User.deleteUser = async(id, result) => {
-      pool.getConnection((err, connection) => {
-        if(err) throw err;
-      connection.query("DELETE FROM users WHERE user_firebase_uid = ?", id, (err, res) => {
-        if (err) {
-          console.log("error: ", err);
-          result(null, err);
-          return;
-        }
-    
+      sql.query("DELETE FROM users WHERE user_firebase_uid = ?", id, (error, res) => {
+        if (error) throw error;
+        
         if (res.affectedRows == 0) {
           // not found User with the id
           result({ kind: "not_found" }, null);
           return;
         }
-    
+
         console.log("deleted user with id: ", id);
         result(null, res);
+        
       });
-    });
+
+
+    //   pool.getConnection((err, connection) => {
+    //     if(err) throw err;
+    //   connection.query("DELETE FROM users WHERE user_firebase_uid = ?", id, (err, res) => {
+    //     if (err) {
+    //       console.log("error: ", err);
+    //       result(null, err);
+    //       return;
+    //     }
+    
+    //     if (res.affectedRows == 0) {
+    //       // not found User with the id
+    //       result({ kind: "not_found" }, null);
+    //       return;
+    //     }
+    
+    //     console.log("deleted user with id: ", id);
+    //     result(null, res);
+    //   });
+    // });
     };
 
   module.exports = User;

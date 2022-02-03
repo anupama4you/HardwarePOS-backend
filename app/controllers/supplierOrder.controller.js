@@ -1,8 +1,8 @@
-const pool = require('../models/db')
+const pool = require('../../db_config/db')
 const supplierOrder = require('../models/supplierOrder.model')
 
-exports.getOrdersBySupplireId = async (req, res) => {
-    const result = await supplierOrder.getOrdersBySupplierId(req.params.supplireId);
+exports.getOrdersBySupplierId = async (req, res) => {
+    const result = await supplierOrder.getOrdersBySupplierId(req.params.supplierId);
     res.send(result);
 };
 
@@ -16,9 +16,9 @@ exports.getSupplyOrdersByDates = async (req, res) => {
   res.send(result);
 };
 
-exports.getOrderDetailsBySupplireOrderId = async (req, res) => {
+exports.getOrderDetailsBySupplierOrderId = async (req, res) => {
   console.log(req.params.supOrderId)
-    const result = await supplierOrder.getOrderDetailsBySupplireOrderId(req.params.supOrderId);
+    const result = await supplierOrder.getOrderDetailsBySupplierOrderId(req.params.supOrderId);
     res.send(result);
 };
 

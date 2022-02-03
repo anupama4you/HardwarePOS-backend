@@ -1,4 +1,4 @@
-const pool = require('../models/db')
+const sql = require('../../db_config/db')
 const Customer = require('../models/customer.model');
 const ReturnItem = require('../models/returnItem.model');
 

@@ -1,4 +1,4 @@
-const pool = require('../models/db')
+const pool = require('../../db_config/db')
 
 exports.addItem = async (req, res) => {
     const {

@@ -1,4 +1,4 @@
-const pool = require('../models/db');
+const sql = require('../../db_config/db');
 
 const Supplier = function(supplier) {};
 
@@ -6,17 +6,12 @@ Supplier.addSupplier = async ({
     name, desc, phone, address
   }) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query
+      sql.query
         (`insert into supplier (name, contactNo, address, description) values
         ('${name}', '${phone}','${address}','${desc}')`,
           (error, results) => {
-            connection.release();
             if (error) {
-              resolve(error);
+              throw error
             } else {
               console.log(results);
               // eslint-disable-next-line
@@ -25,25 +20,18 @@ Supplier.addSupplier = async ({
             }
           },
         );
-      });
     });
     return result;
   };
 
   Supplier.getAllSuppliers = async () => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
+      sql.query('select * from supplier;', (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
+        } else {
+          resolve(res);
         }
-        connection.query('select * from supplier;', (customerGetErr, customerGetResult) => {
-          connection.release();
-          if (customerGetErr) {
-            reject(customerGetErr);
-          } else {
-            resolve(customerGetResult);
-          }
-        });
       });
     });
     return result;
@@ -51,18 +39,12 @@ Supplier.addSupplier = async ({
 
   Supplier.getSupplier = async (supplierId) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
+      sql.query(`select * from supplier where supplier_id = '${supplierId}'`, (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
+        } else {
+          resolve(res);
         }
-        connection.query(`select * from supplier where supplier_id = '${supplierId}'`, (customerGetErr, customerGetResult) => {
-          connection.release();
-          if (customerGetErr) {
-            reject(customerGetErr);
-          } else {
-            resolve(customerGetResult);
-          }
-        });
       });
     });
     return result;
@@ -92,27 +74,21 @@ Supplier.addSupplier = async ({
     name, desc, phone, address
   }) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
+      sql.query(
+        `update supplier set name = '${name}', contactNo = '${phone}',
+        address = '${address}', description = '${desc}'
+        where supplier_id = ${supplierId}`,
+      (err, res) => {
         if (err) {
-          reject(err);
+          throw err;
+        } else {
+          console.log(res);
+          // eslint-disable-next-line
+            res.code = 200;
+          resolve(res);
         }
-        connection.query(
-            `update supplier set name = '${name}', contactNo = '${phone}',
-            address = '${address}', description = '${desc}'
-            where supplier_id = ${supplierId}`,
-          (customerEditErr, customerEditResult) => {
-            connection.release();
-            if (customerEditErr) {
-              resolve(customerEditErr);
-            } else {
-              console.log(customerEditResult);
-              // eslint-disable-next-line
-                customerEditResult.code = 200;
-              resolve(customerEditResult);
-            }
-          },
-        );
-      });
+      },
+    );
     });
     return result;
   };
@@ -120,7 +96,7 @@ Supplier.addSupplier = async ({
   Supplier.addSupplyOrder = async (supplyOrder, res) => {
     const {
       date,
-      supplireId,
+      supplierId,
       items,
     } = supplyOrder;
     try {
@@ -131,7 +107,7 @@ Supplier.addSupplier = async ({
           }
           connection.beginTransaction((err) => {
             connection.query(`INSERT INTO supplyorder( date, supplier_id)
-              VALUES ('${date}', ${supplireId})`, (error, results) => {
+              VALUES ('${date}', ${supplierId})`, (error, results) => {
                 console.log('******',results)
               if (error) {
                 return connection.rollback(() => {
