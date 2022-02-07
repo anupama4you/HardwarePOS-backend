@@ -21,12 +21,13 @@ var server = {
 };
 
 // use the modules
-// app.use(
-// 	cors({
-// 		//origin: process.env.FRONT_END_URL,
-// 		origin: "*"
-// 	})
-// );
+app.use(
+	cors({
+		// origin: process.env.FRONT_END_URL,
+		origin: 'http://localhost:3000',
+		// origin: "*"
+	})
+);
 app.use(cors());
 
 app.use(bodyParser.json());

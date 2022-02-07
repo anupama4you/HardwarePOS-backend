@@ -24,12 +24,12 @@ exports.getOrderDetailsBySupplierOrderId = async (req, res) => {
 
 exports.deleteSupplyOrder = async (req, res) => {
     if (!req.params.supplyOrderId) {
-        res.json({
-          code: 100,
-          message: 'please provide valid parameters'
-        });
-        return;
-      }
+      res.json({
+        code: 100,
+        message: 'please provide valid parameters'
+      });
+      return;
+    }
     const result = await supplierOrder.deleteSupplyOrder(req.params.supplyOrderId);
     res.send(result);
 };

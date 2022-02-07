@@ -1,4 +1,4 @@
-const pool = require('../../db_config/db')
+const sql = require('../../db_config/db')
 const customerOrder = require('../models/customerOrder.model')
 
 exports.getOrdersByCustomerId = async (req, res) => {
@@ -20,46 +20,39 @@ exports.updateCustomerOrderPrintedStatus = async (req, res) => {
     const print_status = req.body.printedStatus;
     const customerOrderId = req.body.cusOrderId;
 
-    pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
+    sql.query(
+      `SELECT * FROM customer_order where idcustomer_order=${customerOrderId} `,
+      (customerDeleteErr, customerDeleteResult) => {
+        if (customerDeleteErr) {
+            res.status(500).send({
+                message: "Error in connection database"
+              });
+        } else {
+          console.log(customerDeleteResult[0].printed ) 
+          
+          if(customerDeleteResult[0].printed == 1){
+            res.status(200).send({
+                printed :true, data: customerDeleteResult[0]
+              });
+          }else{
+            sql.query(
+                `UPDATE customer_order SET printed=${print_status} where idcustomer_order=${customerOrderId} `,
+                (customerDeleteErr, customerDeleteResult) => {
+                  if (customerDeleteErr) {
+                    res.status(500).send({
+                        message: customerDeleteErr
+                      });
+                  } else {
+                    res.status(200).send({
+                        printed :false, data: customerDeleteResult
+                      });
+                  }
+                },
+              );
+          }
         }
-        connection.query(
-          `SELECT * FROM customer_order where idcustomer_order=${customerOrderId} `,
-          (customerDeleteErr, customerDeleteResult) => {
-            connection.release();
-            if (customerDeleteErr) {
-                res.status(500).send({
-                    message: "Error in connection database"
-                  });
-            } else {
-              console.log(customerDeleteResult[0].printed ) 
-              
-              if(customerDeleteResult[0].printed == 1){
-                res.status(200).send({
-                    printed :true, data: customerDeleteResult[0]
-                  });
-              }else{
-                connection.query(
-                    `UPDATE customer_order SET printed=${print_status} where idcustomer_order=${customerOrderId} `,
-                    (customerDeleteErr, customerDeleteResult) => {
-                      if (customerDeleteErr) {
-                        res.status(500).send({
-                            message: customerDeleteErr
-                          });
-                      } else {
-                        res.status(200).send({
-                            printed :false, data: customerDeleteResult
-                          });
-                      }
-                    },
-                  );
-              }
-            }
-          },
-        );
-      
-      });
+      },
+    );
 };
 
 exports.getCustomerOrderByDates = async (req, res) => {

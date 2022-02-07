@@ -1,4 +1,4 @@
-const pool = require('../../db_config/db');
+const sql = require('../../db_config/db');
 const firebase = require('../controllers/user.firebase')
 const userModel = require('../models/user.model')
 
@@ -10,98 +10,81 @@ CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken, user_id) => {
     console.log(customerId,'8****')
     const user = await userModel.findByFirebaseId(userId);
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        let sql = `select * from customer_order co where co.customer_idcustomer =${customerId}`;
+      let sql_query = `select * from customer_order co where co.customer_idcustomer =${customerId}`;
         if (user && user[0].user_role_type && user[0].user_role_type === 2) {
-          sql += ` and co.order_status != 0 and co.user_id='${user_id}' `;
+          sql_query += ` and co.order_status != 0 and co.user_id='${user_id}' `;
         }
-        sql += ' order by co.idcustomer_order desc';
-        connection.query(sql, (customerDeleteErr, customerDeleteResult) => {
-          connection.release();
+        sql_query += ' order by co.idcustomer_order desc';
+        sql.query(sql_query, (customerDeleteErr, customerDeleteResult) => {
           if (customerDeleteErr) {
             reject(customerDeleteErr);
           } else {
             resolve(customerDeleteResult);
           }
         });
-      });
     });
     return result;
   };
 
  CustomerOrder.getOrderDetailsByCustomerOrderId = async (customerOrderId) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          `select *,
-          FLOOR(cob.customer_order_has_batch_qty ) as qty,
-          TRUNCATE(substring(cob.customer_order_has_batch_qty, -2 )/100*i.length,0) as subQty
-          from customer_order_has_batch cob, batch b, item i
-          where cob.customer_order_idcustomer_order = ${customerOrderId}
-          and cob.batch_batch_id=b.batch_id
-          and b.item_item_id = i.item_id `,
-          (customerDeleteErr, customerDeleteResult) => {
-            connection.release();
-            if (customerDeleteErr) {
-              reject(customerDeleteErr);
-            } else {
-              resolve(customerDeleteResult);
-            }
-          },
-        );
-      });
+      sql.query(
+        `select *,
+        FLOOR(cob.customer_order_has_batch_qty ) as qty,
+        TRUNCATE(substring(cob.customer_order_has_batch_qty, -2 )/100*i.length,0) as subQty
+        from customer_order_has_batch cob, batch b, item i
+        where cob.customer_order_idcustomer_order = ${customerOrderId}
+        and cob.batch_batch_id=b.batch_id
+        and b.item_item_id = i.item_id `,
+        (customerDeleteErr, customerDeleteResult) => {
+          if (customerDeleteErr) {
+            throw customerDeleteErr;
+          } else {
+            resolve(customerDeleteResult);
+          }
+        },
+      );
     });
     return result;
   };
 
  CustomerOrder.updateCustomerOrderById = async () => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query('select * from customer_order', (customerOrderErr, customerOrderResult) => {
-          if (customerOrderErr) {
-            reject(customerOrderErr);
-          } else {
-            let qt = 1;
-            let iv = 1;
-            for (let i = 0; i < customerOrderResult.length; i++) {
-              let sql = '';
-              if (customerOrderResult[i].order_status === 0) {
-                sql = `update customer_order co
-                  set co.invoice_no = 'QT_${qt}'
-                  where co.idcustomer_order = ?
-                  `;
-                qt++;
-              } else {
-                sql = `update customer_order co
-                  set co.invoice_no = 'IV_${iv}'
-                  where co.idcustomer_order = ?
-                  `;
-                iv++;
-              }
-              connection.query(
-                sql, [customerOrderResult[i].idcustomer_order],
-                (customerOrderUpdateErr, customerOrderUpdateResult) => {
-                  if ((i + 1) == customerOrderResult.length) {
-                    console.log('customerOrderUpdateResult', customerOrderUpdateResult);
-                    connection.release();
-                  }
-                  if (customerOrderUpdateErr) {
-                    reject(customerOrderUpdateErr);
-                  }
-                },
-              );
+      sql.query('select * from customer_order', (customerOrderErr, customerOrderResult) => {
+        if (customerOrderErr) {
+          throw customerOrderErr;
+        } else {
+          let qt = 1;
+          let iv = 1;
+          for (let i = 0; i < customerOrderResult.length; i++) {
+            let sql_query = '';
+            if (customerOrderResult[i].order_status === 0) {
+              sql_query = `update customer_order co
+                set co.invoice_no = 'QT_${qt}'
+                where co.idcustomer_order = ?
+                `;
+              qt++;
+            } else {
+              sql_query = `update customer_order co
+                set co.invoice_no = 'IV_${iv}'
+                where co.idcustomer_order = ?
+                `;
+              iv++;
             }
+            sql.query(
+              sql_query, [customerOrderResult[i].idcustomer_order],
+              (customerOrderUpdateErr, customerOrderUpdateResult) => {
+                if ((i + 1) == customerOrderResult.length) {
+                  console.log('customerOrderUpdateResult', customerOrderUpdateResult);
+                  sql.end();
+                }
+                if (customerOrderUpdateErr) {
+                  reject(customerOrderUpdateErr);
+                }
+              },
+            );
           }
-        });
+        }
       });
     });
     return result;
@@ -115,18 +98,14 @@ CustomerOrder.getOrdersByCustomerId =  async (customerId, idToken, user_id) => {
       const toDateF = toDate+' 23:59:59'
 
     const result = await new Promise((resolve, reject) => { 
-    pool.getConnection((err, connection) => {
-      if (err) throw err;
-      connection.query(`SELECT * from customer_order where customer_idcustomer = '${customerId}' and 	customer_order_date >= '${fromDateF}' and customer_order_date <= '${toDateF}'`, (err, rows) => {
+      sql.query(`SELECT * from customer_order where customer_idcustomer = '${customerId}' and 	customer_order_date >= '${fromDateF}' and customer_order_date <= '${toDateF}'`, (err, rows) => {
         if (err) {
-          reject(err);
+          throw err;
         } else {
           console.log(rows)
           resolve(rows);
         }
       });
-      connection.release();
-    });
     });
     return result;
   };

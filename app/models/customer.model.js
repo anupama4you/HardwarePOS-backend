@@ -126,7 +126,7 @@ Customer.addCustomerQuery = async ({
               (err, res) => {
                 // console.log(sql);
                 if (err) {
-                  return connection.rollback(() => {
+                  return sql.rollback(() => {
                     throw err;
                   });
                 }
@@ -154,8 +154,8 @@ Customer.addCustomerQuery = async ({
               orderStatus, customerOrderCreditRate, invNo, user_id],
             async (error, results) => {
               if (error) {
-                return connection.rollback(() => {
-                  reject(error);
+                return sql.rollback(() => {
+                  throw error;
                 });
               }
               // save order details
@@ -188,11 +188,9 @@ Customer.addCustomerQuery = async ({
                         [item.unitLength, item.batchId],
                         (err) => {
                           console.log(item.batchId)
-                          if (err) {
-                            // connection.release();
-                    
-                            return connection.rollback(() => {
-                              reject(err);
+                          if (err) {                    
+                            return sql.rollback(() => {
+                              throw err;
                             });
                           }
                           return unitLengthResolve(1);
@@ -209,8 +207,7 @@ Customer.addCustomerQuery = async ({
                     (err, res) => {
                       console.log('***blah***', res[0].qty, item.qty)
                       if (res[0].qty < item.qty) {
-                        // connection.release();
-                        return connection.rollback(() => {
+                        return sql.rollback(() => {
                           reject(item);
                         });
                       }
@@ -219,8 +216,7 @@ Customer.addCustomerQuery = async ({
                         [results.insertId, item.batchId, item.qty, item.discount, item.total],
                         (err) => {
                           if (err) {
-                            // connection.release();
-                            return connection.rollback(() => {
+                            return sql.rollback(() => {
                               throw err;
                             });
                           }
@@ -234,8 +230,7 @@ Customer.addCustomerQuery = async ({
                             (err) => {
                               console.log('***Batch ID:',item.batchId)
                               if (err) {
-                                // connection.release();
-                                return connection.rollback(() => {
+                                return sql.rollback(() => {
                                   reject(err);
                                 });
                               }
@@ -252,9 +247,8 @@ Customer.addCustomerQuery = async ({
                       );
                       
                       if (err) {
-                        // connection.release();
                         return sql.rollback(() => {
-                          reject(err);
+                          throw err;
                         });
                       }
                     },
@@ -278,12 +272,11 @@ Customer.addCustomerQuery = async ({
                         reject(err);
                       });
                     }
-                    // connection.release();
                     const customer = await Customer.getCustomerQuery(customerId);
                     const response = {
                       code: 200, status: 'Success',
                       orderId: results.insertId,
-                      invoice_no: getOrderResult[0].invoice_no,
+                      invoice_no: res[0].invoice_no,
                       customer,
                     };
                     resolve(response);

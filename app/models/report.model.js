@@ -1,5 +1,5 @@
 const userFirebase = require('../controllers/user.firebase');
-const pool = require('../../db_config/db');
+const sql = require('../../db_config/db');
 const userModel = require('../models/user.model')
 
 const Report = function(report) {};
@@ -172,13 +172,9 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
 
   Report.getReportDetailQuery = (fromDate, toDate, type, userRole) => {
     const result = new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        let sql = '';
+      let sql_query = '';
         if (type == 1) {
-          sql += `select
+          sql_query += `select
           co.customer_order_date as order_date, co.invoice_no, c.customer_name AS customer, u.name AS user, co.customer_order_total as total, co.customer_order_paid as paid
           from customer_order co, customer c, users u
           where co.customer_order_date >= '${fromDate}' and co.customer_order_date <= '${toDate} 23:59:59'
@@ -186,11 +182,11 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
           and co.customer_idcustomer =c.idcustomer
           and co.user_id = u.user_firebase_uid`;
           if (userRole === 2) {
-            sql += ' and co.order_status != 0 ';
+            sql_query += ' and co.order_status != 0 ';
           }
         }
         if (type == 2) {
-          sql += `select
+          sql_query += `select
           co.customer_order_date as order_date, co.invoice_no, c.customer_name as customer, u.name as user, co.customer_order_total as total, co.customer_order_paid as paid
           from customer_order co, customer c, users u
           where co.customer_order_date >= '${fromDate}' and co.customer_order_date <= '${toDate} 23:59:59'
@@ -198,18 +194,18 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
           and co.customer_idcustomer =c.idcustomer
           and co.user_id = u.user_firebase_uid`;
           if (userRole === 2) {
-            sql += ' and co.order_status != 0 ';
+            sql_query += ' and co.order_status != 0 ';
           }
         }
         if (type == 3) {
-          sql += `SELECT
+          sql_query += `SELECT
           so.date as order_date, s.name, so.order_id
           from supplyorder so, supplier s
           where so.date >= '${fromDate}' and so.date <= '${toDate} 23:59:59'
           and so.supplier_id = s.supplier_id `;
         }
         if (type == 4) {
-          sql += `SELECT
+          sql_query += `SELECT
           ir.item_return_date as returned_date, c.customer_name as customer, u.name as user, ir.return_value as returned_amount
           FROM item_return ir, customer_order co, customer c, users u
           where ir.item_return_date >= '${fromDate}' and ir.item_return_date <= '${toDate} 23:59:59'
@@ -218,8 +214,8 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
           and co.user_id = u.user_firebase_uid`;
         }
 
-        connection.query(
-          sql,
+        sql.query(
+          sql_query,
           (itemReturnSummeryErr, itemReturnSummeryResult) => {
             connection.release();
             // console.log(sql);
@@ -230,7 +226,6 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
             }
           },
         );
-      });
     });
     return result;
   };

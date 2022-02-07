@@ -1,4 +1,4 @@
-const pool = require('../../db_config/db');
+const sql = require('../../db_config/db');
 
 
   const Payment = function(payment) {};
@@ -19,42 +19,37 @@ const pool = require('../../db_config/db');
   }) => {
     console.log(date, remark, amount, type, custOrderId, checqueNo, checqueDate);
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection(async (err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        connection.query(
-          'INSERT INTO customer_payment VALUES (null,?,?,?,?,?,?,?)',
-          [
-            date,
-            remark,
-            amount,
-            type,
-            custOrderId,
-            checqueNo,
-            checqueDate,
-          ],
-          (paymentAddErr, paymentAddResult) => {
-            if (paymentAddErr) {
-              reject(paymentAddErr);
-            } else {
-              resolve(paymentAddResult);
-            }
-          },
-        );
-        connection.query(
-          `update customer_order co set co.customer_order_paid = (co.customer_order_paid+${amount})
-          where co.idcustomer_order =${custOrderId}`,
-          (paymentAddErr, paymentAddResult) => {
-            connection.release();
-            if (paymentAddErr) {
-              reject(paymentAddErr);
-            } else {
-              resolve(paymentAddResult);
-            }
-          },
-        );
-      });
+      sql.query(
+        'INSERT INTO customer_payment VALUES (null,?,?,?,?,?,?,?)',
+        [
+          date,
+          remark,
+          amount,
+          type,
+          custOrderId,
+          checqueNo,
+          checqueDate,
+        ],
+        (paymentAddErr, paymentAddResult) => {
+          if (paymentAddErr) {
+            reject(paymentAddErr);
+          } else {
+            resolve(paymentAddResult);
+          }
+        },
+      );
+      sql.query(
+        `update customer_order co set co.customer_order_paid = (co.customer_order_paid+${amount})
+        where co.idcustomer_order =${custOrderId}`,
+        (paymentAddErr, paymentAddResult) => {
+          connection.release();
+          if (paymentAddErr) {
+            throw paymentAddErr;
+          } else {
+            resolve(paymentAddResult);
+          }
+        },
+      );
     });
     return result;
   };

@@ -57,69 +57,62 @@ SupplierOrder.getOrdersBySupplierId = async (supplierId) => {
   
     try {
       const result = await new Promise((resolve, reject) => {
-        pool.getConnection((err, connection) => {
-          if (err) {
-            reject(err);
+
+        sql.query(`select * from supplyorder so, supplyorder_has_batch shb
+            where so.order_id =${supplyOrderId}
+          and so.order_Id = shb.supplyorder_order_Id`,
+        [supplyOrderId], (error, results) => {
+          if (error) {
+            return sql.rollback(() => {
+              throw error;
+            });
           }
-          connection.beginTransaction((err) => {
-            connection.query(`select * from supplyorder so, supplyorder_has_batch shb
-               where so.order_id =${supplyOrderId}
-              and so.order_Id = shb.supplyorder_order_Id`,
-            [supplyOrderId], (error, results) => {
-              if (error) {
-                return connection.rollback(() => {
-                  reject(error);
-                });
-              }
-              if (!results) {
-                return connection.rollback(() => {
-                  resolve({
-                    code: 100,
-                    message: 'supplier order must contain items'
+          if (!results) {
+            return sql.rollback(() => {
+              resolve({
+                code: 100,
+                message: 'supplier order must contain items'
+              });
+            });
+          }
+          for (let i = 0; i < results.length; i++) {
+            console.log(results[i]);
+            sql.query(
+              `update batch set qty = (qty-${results[i].supplyorder_has_batch__qty}) where batch_id = ${results[i].batch_batch_id}`,
+              (addSupplyOrderError) => {
+                if (addSupplyOrderError) {
+                  return sql.rollback(() => {
+                    throw addSupplyOrderError;
                   });
-                });
-              }
-              for (let i = 0; i < results.length; i++) {
-                console.log(results[i]);
-                connection.query(
-                  `update batch set qty = (qty-${results[i].supplyorder_has_batch__qty}) where batch_id = ${results[i].batch_batch_id}`,
-                  (addSupplyOrderError) => {
-                    if (addSupplyOrderError) {
-                      return connection.rollback(() => {
-                        reject(addSupplyOrderError);
-                      });
-                    }
-                    if (results.length === i + 1) {
-                      connection.query(
-                        `delete FROM supplyorder where order_Id = ${supplyOrderId}`,
-                        (deleteSupplyOrderError, deleteSupplyOrderResult) => {
-                          if (deleteSupplyOrderError) {
-                            return connection.rollback(() => {
-                              reject(deleteSupplyOrderError);
-                            });
-                          }
-                          connection.commit((commiterr) => {
-                            if (commiterr) {
-                              connection.rollback(() => {
-                                reject(commiterr);
-                              });
-                            }
-                            connection.release();
+                }
+                if (results.length === i + 1) {
+                  sql.query(
+                    `delete FROM supplyorder where order_Id = ${supplyOrderId}`,
+                    (deleteSupplyOrderError, deleteSupplyOrderResult) => {
+                      if (deleteSupplyOrderError) {
+                        return sql.rollback(() => {
+                          throw deleteSupplyOrderError;
+                        });
+                      }
+                      sql.commit((commiterr) => {
+                        if (commiterr) {
+                          sql.rollback(() => {
+                            throw commiterr;
                           });
-                          console.log('deleteSupplyOrderResult ', deleteSupplyOrderResult);
-                          resolve({ code: 200, status: 'Success' });
-                          return null;
-                        },
-                      );
-                    }
-                    return null;
-                  },
-                );
-              }
-            },
+                        }
+                      });
+                      console.log('deleteSupplyOrderResult ', deleteSupplyOrderResult);
+                      resolve({ code: 200, status: 'Success' });
+                      return null;
+                    },
+                  );
+                }
+                return null;
+              },
             );
-          });
-        });
+          }
+        },
+        );
       });
       return result;
     } catch (e) {

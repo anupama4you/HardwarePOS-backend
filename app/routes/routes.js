@@ -4,15 +4,15 @@ module.exports = (app) => {
 	const users = require("../controllers/user.controller");
 
 	//******users */
-	// app.post("/users", users.create);
-	// app.get("/users", users.findAll);
-	// app.get("/users/:firebaseId", users.findOne);
-	// app.put("/users/:firebaseId", users.updateByFirebaseId);
-	app.delete("/users/:firebaseId", users.deleteByFirebaseId); //TODO: need authorized user for this, but works
-	//// app.delete("/users", customers.deleteAll);
+	app.post("/users", users.create); // OK 
+	app.get("/users", users.findAll); // OK
+	app.get("/users/:firebaseId", users.findOne); // OK
+	app.put("/users/:firebaseId", users.updateByFirebaseId); // OK
+	app.delete("/users/:firebaseId", users.deleteByFirebaseId); // OK
+	// app.delete("/users", customers.deleteAll);
 
-	// //******Auth */
-	// app.get("/auth", users.getAuth);
+	//******Auth */
+	app.get("/auth", users.getAuth); // TODO: how to get valid Firebase idToke
 
 	const itemController = require("../controllers/item.controller");
 
@@ -43,10 +43,10 @@ module.exports = (app) => {
 	app.put("/customer/:customerId", customerController.editCustomer); // OK
 
 	//******Add customer order */
-	app.post("/addCustomerOrder", customerController.addCustomerOrder); // TODO: How to use 'batches'?
+	app.post("/addCustomerOrder", customerController.addCustomerOrder); // TODO: Works, but logs errors still
 
 	//******Get return debit by customer */
-	app.get( // TODO: sql syntax error?
+	app.get( // OK
 		"/getReturnDebitByCustomer/:customerId",
 		customerController.getReturnDebitByCustomer
 	);
@@ -71,8 +71,8 @@ module.exports = (app) => {
 	app.get("/get_Supplier/:supplierId", supplierController.getSupplier); // OK
 	app.put("/updateSupplier", supplierController.updateSupplier); // OK
 
-	// //******Add supply order */
-	// app.post("/add_supplyOrder", supplierController.addSupplyOrder); // TODO
+	//******Add supply order */
+	app.post("/add_supplyOrder", supplierController.addSupplyOrder); // OK
 
 	const supplierOrderController = require("../controllers/supplierOrder.controller");
 
@@ -85,71 +85,71 @@ module.exports = (app) => {
 		"/getSupplyOrderByDates",
 		supplierOrderController.getSupplyOrdersByDates
 	);
-	app.get(
+	app.get( // OK
 		"/getOrderDetailsBySupplierOrderId/:supOrderId",
 		supplierOrderController.getOrderDetailsBySupplierOrderId
 	);
-	// app.delete(
-	// 	"/deleteSupplyOrder/:supplyOrderId",
-	// 	supplierOrderController.deleteSupplyOrder
-	// );
+	app.delete( // OK
+		"/deleteSupplyOrder/:supplyOrderId",
+		supplierOrderController.deleteSupplyOrder
+	);
 
-	// const customerOrderController = require("../controllers/customerOrder.controller");
+	const customerOrderController = require("../controllers/customerOrder.controller");
 
-	// //******Customer order */
-	// app.get(
-	// 	"/getOrdersByCustomerId/:customerId/:idToken/:user_id",
-	// 	customerOrderController.getOrdersByCustomerId
-	// );
-	// app.get(
-	// 	"/getOrderDetailsByOrderId/:customerOrderId",
-	// 	customerOrderController.getOrderDetailsByOrderId
-	// );
-	// app.put("/updateOrderId", customerOrderController.updateCustomerOrderById);
-	// app.get(
-	// 	"/getCustomerOrderByDates",
-	// 	customerOrderController.getCustomerOrderByDates
-	// );
-	// app.put(
-	// 	"/updatePrintedStatus",
-	// 	customerOrderController.updateCustomerOrderPrintedStatus
-	// );
+	//******Customer order */
+	app.get( // TODO: need valid FirebaseId
+		"/getOrdersByCustomerId/:customerId/:idToken/:user_id",
+		customerOrderController.getOrdersByCustomerId
+	);
+	app.get( // OK
+		"/getOrderDetailsByOrderId/:customerOrderId",
+		customerOrderController.getOrderDetailsByOrderId
+	);
+	app.put("/updateOrderId", customerOrderController.updateCustomerOrderById); // TODO:  where to use updateOrderId? Works but in Postman "Sending request" will not stop
+	app.get( // OK
+		"/getCustomerOrderByDates",
+		customerOrderController.getCustomerOrderByDates
+	);
+	app.put( // OK
+		"/updatePrintedStatus",
+		customerOrderController.updateCustomerOrderPrintedStatus
+	);
 
-	// const paymentController = require("../controllers/payment.controller");
+	const paymentController = require("../controllers/payment.controller");
 
-	// //******Payments */
-	// app.post("/payment", paymentController.addPayment);
+	//******Payments */
+	app.post("/payment", paymentController.addPayment); // OK
 
-	// //******Return items */
-	// app.post("/return", itemController.addReturnItemQuery);
-	// app.post("/returnTemp", itemController.addReturnItemTemp);
-	// app.delete(
-	// 	"/deleteReturnTemp/:returnItemId",
-	// 	itemController.deleteReturnTemp
-	// );
-	// app.get("/getReturnTemp", itemController.getAllReturnItems);
-	// app.get("/getReturnTempByPerson/:cusOrSup", itemController.getReturnItems);
+	//******Return items */
+	app.post("/return", itemController.addReturnItemQuery); // OK
+	app.post("/returnTemp", itemController.addReturnItemTemp); // OK
+	app.delete( // OK
+		"/deleteReturnTemp/:returnItemId",
+		itemController.deleteReturnTemp
+	);
+	app.get("/getReturnTemp", itemController.getAllReturnItems); // OK
+	app.get("/getReturnTempByPerson/:cusOrSup", itemController.getReturnItems); // OK
 
-	// const reportController = require("../controllers/report.controller");
+	const reportController = require("../controllers/report.controller");
 
-	// //******Reports */
-	// app.get("/gerReportByDateRange", reportController.getReportStatictics);
-	// app.get(
-	// 	"/gerReportDetailsByDateRangeAndType",
-	// 	reportController.getReportDetail
-	// );
+	//******Reports */
+	app.get("/getReportByDateRange", reportController.getReportStatictics); // TODO: Need valid FirebaseId Token
+	app.get( // TODO: Need valid FirebaseId Token
+		"/getReportDetailsByDateRangeAndType",
+		reportController.getReportDetail
+	);
 
-	// const quotationController = require("../controllers/quotation.controller");
+	const quotationController = require("../controllers/quotation.controller");
 
-	// //****Quotations*****/
-	// app.post("/add_quotation", quotationController.addItem);
-	// app.get("/get_quotation", quotationController.getAllQuotations);
-	// app.get(
-	// 	"/get_quotationFromDates",
-	// 	quotationController.getAllQuotationsfromDates
-	// );
-	// app.get(
-	// 	"/getQuotationByNo/:quotationNo",
-	// 	quotationController.getQuotationByNo
-	// );
+	//****Quotations*****/
+	app.post("/add_quotation", quotationController.addItem); // OK
+	app.get("/get_quotation", quotationController.getAllQuotations); // OK
+	app.get( // OK
+		"/get_quotationFromDates",
+		quotationController.getAllQuotationsfromDates
+	);
+	app.get( // OK
+		"/getQuotationByNo/:quotationNo",
+		quotationController.getQuotationByNo
+	);
 };

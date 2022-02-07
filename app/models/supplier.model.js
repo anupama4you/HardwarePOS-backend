@@ -101,133 +101,125 @@ Supplier.addSupplier = async ({
     } = supplyOrder;
     try {
       const result = await new Promise((resolve, reject) => {
-        pool.getConnection((err, connection) => {
-          if (err) {
-            reject(err);
-          }
-          connection.beginTransaction((err) => {
-            connection.query(`INSERT INTO supplyorder( date, supplier_id)
-              VALUES ('${date}', ${supplierId})`, (error, results) => {
-                console.log('******',results)
-              if (error) {
-                return connection.rollback(() => {
-                  reject(error);
+        sql.beginTransaction((err) => {
+          sql.query(`INSERT INTO supplyorder( date, supplier_id)
+            VALUES ('${date}', ${supplierId})`, (error, results) => {
+              console.log('******',results)
+            if (error) {
+              return connection.rollback(() => {
+                reject(error);
+              });
+            }
+            if (!items) {
+              return sql.rollback(() => {
+                resolve({
+                  code: 100,
+                  message: 'Supplier order must contain items'
+                });
+              });
+            }
+            for (let i = 0; i < items.length; i++) {
+              console.log('XXXX')
+              if (!parseInt(items[i].qty)) {
+                return sql.rollback(() => {
+                  resolve({ status: 100, message: 'item qty must in double' });
                 });
               }
-              if (!items) {
-                return connection.rollback(() => {
-                  resolve({
-                    code: 100,
-                    message: 'Supplier order must contain items'
-                  });
-                });
-              }
-              for (let i = 0; i < items.length; i++) {
-                console.log('XXXX')
-                if (!parseInt(items[i].qty)) {
-                  return connection.rollback(() => {
-                    resolve({ status: 100, message: 'item qty must in double' });
-                  });
-                }
-                connection.query(
-                  `SELECT * FROM  batch WHERE  item_item_id =${items[i].id}
-                  AND  buying_price =${items[i].buyPrice} AND  selling_price =${items[i].sellPrice}`,
-                  (matchingBatchesError, matchingBatches) => {
-                    if (matchingBatchesError) {
-                      return connection.rollback(() => {
-                        reject(matchingBatchesError);
-                      });
-                    }
-                    if (matchingBatches.length > 0) {
-                      // found previous batch and update qty of this
-                      connection.query(
-                        `UPDATE batch SET qty=(qty+?), supply_order_note=? WHERE batch_id = ?`,
-                        [items[i].qty, items[i].supplyOrderNote, matchingBatches[0].batch_id] ,
-                      (updateBatchError) => {
-                          if (updateBatchError) {
-                            return connection.rollback(() => {
-                              reject(updateBatchError);
-                            });
-                          }
-                          connection.query(
-                            `INSERT INTO supplyorder_has_batch
-                            VALUES (${results.insertId},${matchingBatches[0].batch_id},${items[i].qty})`,
-                            (addSupplyOrderError) => {
-                              if (addSupplyOrderError) {
-                                return connection.rollback(() => {
-                                  reject(addSupplyOrderError);
-                                });
-                              }
-                              if (items.length === i + 1) {
-                                connection.commit((commiterr) => {
-                                  if (commiterr) {
-                                    connection.release();
-                                    connection.rollback(() => {
-                                      reject(commiterr);
-                                    });
-                                  }
-                                  connection.release();
-                                });
-                                resolve({ code: 200, status: 'Success' });
-                              }
-                            }
-                          );
-                        }
-                      );
-                    } else {
-                      // create new batch here
-                      connection.query(
-                        `INSERT INTO batch(batch_id, buying_price, selling_price,
-                          qty, item_item_id, supply_order_note)
-                          VALUES (null, ${items[i].buyPrice}, ${items[i].sellPrice},
-                             ${items[i].qty}, ${items[i].id}, '${items[i].supplyOrderNote}' )`,
-                        (addBatchError, addBatchRes) => {
-                          if (addBatchError) {
-                            return connection.rollback(() => {
-                              reject(addBatchError);
-                            });
-                          }
-                          
-                          connection.query(
-                            `INSERT INTO supplyorder_has_batch
-                            VALUES (${results.insertId},${addBatchRes.insertId},${items[i].qty})`,
-                            (addSupplyOrderError) => {
-                              if (addSupplyOrderError) {
-                                return connection.rollback(() => {
-                                  reject(addSupplyOrderError);
-                                });
-                              }
-                              if (items.length === i + 1) {
-                                connection.commit((commiterr) => {
-                                  if (commiterr) {
-                                    connection.release();
-                                    connection.rollback(() => {
-                                      reject(commiterr);
-                                    });
-                                  }
-                                  connection.release();
-                                });
-                                resolve({ code: 200, status: 'Success' });
-                              }
-                            }
-                          );
-                        }
-                      );
-                    }
+              sql.query(
+                `SELECT * FROM  batch WHERE  item_item_id =${items[i].id}
+                AND  buying_price =${items[i].buyPrice} AND  selling_price =${items[i].sellPrice}`,
+                (matchingBatchesError, matchingBatches) => {
+                  if (matchingBatchesError) {
+                    return sql.rollback(() => {
+                      reject(matchingBatchesError);
+                    });
                   }
-                );
-              }
-              // connection.commit((commiterr) => {
-              //   if (commiterr) {
-              //     connection.release();
-              //     connection.rollback(() => {
-              //       reject(commiterr);
-              //     });
-              //   }
-              //   connection.release();
-              // });
-              // resolve({ code: 200, status: 'Success' });
-            });
+                  if (matchingBatches.length > 0) {
+                    // found previous batch and update qty of this
+                    sql.query(
+                      `UPDATE batch SET qty=(qty+?), supply_order_note=? WHERE batch_id = ?`,
+                      [items[i].qty, items[i].supplyOrderNote, matchingBatches[0].batch_id] ,
+                    (updateBatchError) => {
+                        if (updateBatchError) {
+                          return sql.rollback(() => {
+                            reject(updateBatchError);
+                          });
+                        }
+                        sql.query(
+                          `INSERT INTO supplyorder_has_batch
+                          VALUES (${results.insertId},${matchingBatches[0].batch_id},${items[i].qty})`,
+                          (addSupplyOrderError) => {
+                            if (addSupplyOrderError) {
+                              return sql.rollback(() => {
+                                reject(addSupplyOrderError);
+                              });
+                            }
+                            if (items.length === i + 1) {
+                              sql.commit((commiterr) => {
+                                if (commiterr) {
+                                  sql.release();
+                                  sql.rollback(() => {
+                                    reject(commiterr);
+                                  });
+                                }
+                              });
+                              resolve({ code: 200, status: 'Success' });
+                            }
+                          }
+                        );
+                      }
+                    );
+                  } else {
+                    // create new batch here
+                    sql.query(
+                      `INSERT INTO batch(batch_id, buying_price, selling_price,
+                        qty, item_item_id, supply_order_note)
+                        VALUES (null, ${items[i].buyPrice}, ${items[i].sellPrice},
+                           ${items[i].qty}, ${items[i].id}, '${items[i].supplyOrderNote}' )`,
+                      (addBatchError, addBatchRes) => {
+                        if (addBatchError) {
+                          return sql.rollback(() => {
+                            reject(addBatchError);
+                          });
+                        }
+                        
+                        sql.query(
+                          `INSERT INTO supplyorder_has_batch
+                          VALUES (${results.insertId},${addBatchRes.insertId},${items[i].qty})`,
+                          (addSupplyOrderError) => {
+                            if (addSupplyOrderError) {
+                              return sql.rollback(() => {
+                                reject(addSupplyOrderError);
+                              });
+                            }
+                            if (items.length === i + 1) {
+                              sql.commit((commiterr) => {
+                                if (commiterr) {
+                                  sql.rollback(() => {
+                                    reject(commiterr);
+                                  });
+                                }
+                              });
+                              resolve({ code: 200, status: 'Success' });
+                            }
+                          }
+                        );
+                      }
+                    );
+                  }
+                }
+              );
+            }
+            // connection.commit((commiterr) => {
+            //   if (commiterr) {
+            //     connection.release();
+            //     connection.rollback(() => {
+            //       reject(commiterr);
+            //     });
+            //   }
+            //   connection.release();
+            // });
+            // resolve({ code: 200, status: 'Success' });
           });
         });
       });

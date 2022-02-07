@@ -10,6 +10,7 @@ exports.create = async (req, res) => {
   try {
     
   const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization)
+
   let firebaseId = null;
 
   // Validate request
@@ -70,14 +71,15 @@ exports.create = async (req, res) => {
 /**** Get one user ********/
 exports.findOne = async(req, res) => {
   try{
-  if (!req.params.firebaseId) {
-    res.status(400).send({
-      message: "User id is mandatory!"
-    });
-  }
+    if (!req.params.firebaseId) {
+      res.status(400).send({
+        message: "User id is mandatory!"
+      });
+    }
 
-  const results = await User.findByFirebaseId(req.params.firebaseId);
-  console.log(results)
+    const results = await User.findByFirebaseId(req.params.firebaseId);
+
+    console.log(results)
     if (results) {
       res.status(200).send(results);
     } else {
@@ -85,9 +87,10 @@ exports.findOne = async(req, res) => {
         message: `Not found User with id ${req.params.firebaseId}.`
       });
     }
+
   } catch (error) {
     res.status(500).send({
-      message: error
+      message: 'error'
     });
   }
 };
@@ -95,18 +98,10 @@ exports.findOne = async(req, res) => {
 // Retrieve all Users from the database.
 exports.findAll = async(req, res) => {
   try{
-  const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization)
-
-  pool.getConnection((err, connection) => {
-    if (err) {
-        res.status(100).send({
-            message: "Error in connection database"
-          });
-    }
+    const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization)
 
     if((userRoleType) == 1){
-      connection.query(`SELECT * FROM users`, (err, rows) => {
-        connection.release();
+      sql.query(`SELECT * FROM users`, (err, rows) => {
         if (err)
             res.status(500).send({
               message: err});
@@ -118,13 +113,11 @@ exports.findAll = async(req, res) => {
             "Invalid user."
         });
     }
-
-  });
-} catch (error) {
-  res.status(500).send({
-    message: error
-  });
-}
+    } catch (error) {
+    res.status(500).send({
+      message: error
+    });
+    }
 };
 
 const getUserRoleTypeFromToken = async(idToken) => {
@@ -144,8 +137,8 @@ const getUserRoleTypeFromToken = async(idToken) => {
 
 exports.updateByFirebaseId = async(req, res) => {
   try{
-  const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
-
+    const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
+    
     if((userRoleType) == 1){
        await userModel.updateUserById(req.params.firebaseId, req.body).then(
         (firebaseResponse) => {
@@ -181,7 +174,6 @@ exports.updateByFirebaseId = async(req, res) => {
 };
 
   exports.deleteByFirebaseId = async(req, res) => {
-    console.log('here');
     try{
       const userRoleType = await getUserRoleTypeFromToken(req.headers.authorization);
 
