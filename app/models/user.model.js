@@ -28,9 +28,7 @@ const User = function(user) {
 
   //get all users
   User.getAllUsers = async (result) => {
-    pool.getConnection((err, connection) => {
-      if(err) throw err;
-      connection.query("SELECT * FROM users", (err, res) => {
+    sql.query("SELECT * FROM users", (err, res) => {
       if (err) {
         console.log("error: ", err);
         result(null, err);
@@ -38,7 +36,6 @@ const User = function(user) {
       }
       return(res);
     });
-  });
   };
 
   //get user by firebase id
@@ -59,9 +56,7 @@ User.findByFirebaseId = async(user_firebase_uid) => {
 
   //get user by user id
   User.findByUserId = async (user_id, result) => {
-    pool.getConnection((err, connection) => {
-      if(err) throw err;
-    connection.query(`SELECT * FROM users WHERE user_id = ${user_id} LIMIT 1`, (err, res) => {
+    sql.query(`SELECT * FROM users WHERE user_id = ${user_id} LIMIT 1`, (err, res) => {
       if (err) {
         console.log("error: ", err);
         result(err, null);
@@ -77,7 +72,6 @@ User.findByFirebaseId = async(user_firebase_uid) => {
       // not found User with the id
       result({ kind: "not_found" }, null);
     });
-  });
   };
 
   //update user

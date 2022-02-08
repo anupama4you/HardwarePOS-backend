@@ -52,18 +52,12 @@ Supplier.addSupplier = async ({
 
   Supplier.getSupplierByName = async (supplierName) => {
     const result = await new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
+      sql.query(`SELECT * FROM supplier WHERE name like '%${supplierName}%'`, (customerGetErr, customerGetResult) => {
+        if (customerGetErr) {
+          reject(customerGetErr);
+        } else {
+          resolve(customerGetResult);
         }
-        connection.query(`SELECT * FROM supplier WHERE name like '%${supplierName}%'`, (customerGetErr, customerGetResult) => {
-          connection.release();
-          if (customerGetErr) {
-            reject(customerGetErr);
-          } else {
-            resolve(customerGetResult);
-          }
-        });
       });
     });
     return result;
@@ -106,7 +100,7 @@ Supplier.addSupplier = async ({
             VALUES ('${date}', ${supplierId})`, (error, results) => {
               console.log('******',results)
             if (error) {
-              return connection.rollback(() => {
+              return sql.rollback(() => {
                 reject(error);
               });
             }
@@ -210,16 +204,6 @@ Supplier.addSupplier = async ({
                 }
               );
             }
-            // connection.commit((commiterr) => {
-            //   if (commiterr) {
-            //     connection.release();
-            //     connection.rollback(() => {
-            //       reject(commiterr);
-            //     });
-            //   }
-            //   connection.release();
-            // });
-            // resolve({ code: 200, status: 'Success' });
           });
         });
       });

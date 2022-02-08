@@ -33,4 +33,3 @@ exports.deleteSupplyOrder = async (req, res) => {
     const result = await supplierOrder.deleteSupplyOrder(req.params.supplyOrderId);
     res.send(result);
 };
-  

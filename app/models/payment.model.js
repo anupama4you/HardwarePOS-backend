@@ -1,7 +1,16 @@
 const sql = require('../../db_config/db');
 
+const Payment = function (payment) {};
 
-  const Payment = function(payment) {};
+Payment.addPayment = async (payment, res) => {
+	const result = await Payment.addPaymentQuery(payment);
+	if (result.affectedRows > 0) {
+		result.code = 200;
+	} else {
+		result.code = 100;
+	}
+	return result;
+};
 
   Payment.addPayment = async (payment, res) => {
     const result = await Payment.addPaymentQuery(payment);
@@ -42,7 +51,7 @@ const sql = require('../../db_config/db');
         `update customer_order co set co.customer_order_paid = (co.customer_order_paid+${amount})
         where co.idcustomer_order =${custOrderId}`,
         (paymentAddErr, paymentAddResult) => {
-          connection.release();
+          
           if (paymentAddErr) {
             throw paymentAddErr;
           } else {
@@ -53,9 +62,5 @@ const sql = require('../../db_config/db');
     });
     return result;
   };
-
-
-
-
 
 module.exports = Payment;

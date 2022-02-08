@@ -79,8 +79,6 @@ exports.addReturnItemTemp = async (req, res) => {
       custOrderId, batchId, name, date, qty, len, cusOrderQty, status, cusOrSup
     } = req.body;
 
-    // const name1 = '5/16 X 3/8 SINGLE CHANNEL - NATURAL 12ʾ | 374 X 1 0` - 24\%';
-
     let duplicate;
 
     sql.query(

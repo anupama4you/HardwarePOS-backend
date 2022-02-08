@@ -11,13 +11,13 @@ exports.getReportStatictics = async (req, res) => {
 };
 
 exports.getReportDetail = async (req, res) => {
-  console.log(req.query.fromDate)
-    const result = await Report.getReportDetail({
-            fromDate: req.query.fromDate,
-            toDate: req.query.toDate,
-            type: req.query.type,
-            idToken: req.query.idToken,
-          });
-    res.send(result);
+	console.log(req.query.fromDate);
+	const result = await Report.getReportDetail({
+		fromDate: req.query.fromDate,
+		toDate: req.query.toDate,
+		type: req.query.type,
+		idToken: req.query.idToken,
+		});
+	res.send(result);
 };
 

@@ -23,11 +23,7 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
 
   Report.getCashOrderSummeryQuery = (fromDate, toDate, userRole) => {
     const result = new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        let sql = `select
+      let sql_query = `select
           sum(co.customer_order_total ) as customerOrderTotal,
           count(co.customer_idcustomer) as customerOrderCount,
           sum(co.customer_order_total -
@@ -43,13 +39,11 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
         and co.customer_order_total <= co.customer_order_paid
         `;
         if (userRole === 2) {
-          sql += ' and co.order_status != 0 ';
+          sql_query += ' and co.order_status != 0 ';
         }
-        connection.query(
-          sql,
+        sql.query(
+          sql_query,
           (customerOrderSummeryErr, customerOrderSummeryResult) => {
-            connection.release();
-            console.log(sql);
             if (customerOrderSummeryErr) {
               reject(customerOrderSummeryErr);
             } else {
@@ -57,18 +51,13 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
             }
           },
         );
-      });
     });
     return result;
   };
 
   Report.getCreditOrderSummeryQuery = (fromDate, toDate, userRole) => {
     const result = new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        let sql = `select
+      let sql_query = `select
         sum(co.customer_order_total ) as customerOrderTotal,
         count(co.customer_idcustomer) as customerOrderCount,
         sum(co.customer_order_total -
@@ -87,13 +76,11 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
         and co.customer_order_total > co.customer_order_paid
         `;
         if (userRole === 2) {
-          sql += ' and co.order_status != 0 ';
+          sql_query += ' and co.order_status != 0 ';
         }
-        connection.query(
-          sql,
+        sql.query(
+          sql_query,
           (customerOrderSummeryErr, customerOrderSummeryResult) => {
-            connection.release();
-            console.log(sql);
             if (customerOrderSummeryErr) {
               reject(customerOrderSummeryErr);
             } else {
@@ -101,18 +88,13 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
             }
           },
         );
-      });
     });
     return result;
   };
 
   Report.getSupplyOrderSummeryQuery = (fromDate, toDate) => {
     const result = new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        const sql = `select
+      const sql_query = `select
             count(so.order_Id) as supplyOrderCount,
             sum((
               select sum(b.buying_price * shb.supplyorder_has_batch__qty)
@@ -123,11 +105,9 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
           from supplyorder so
           where so.date >= '${fromDate}' and so.date <='${toDate} 23:59:59'
         `;
-        connection.query(
-          sql,
+        sql.query(
+          sql_query,
           (supplierOrderSummeryErr, supplierOrderSummeryResult) => {
-            connection.release();
-            console.log(sql);
             if (supplierOrderSummeryErr) {
               reject(supplierOrderSummeryErr);
             } else {
@@ -135,28 +115,23 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
             }
           },
         );
-      });
     });
     return result;
   };
 
   Report.getReturnItemSummeryQuery = (fromDate, toDate) => {
     const result = new Promise((resolve, reject) => {
-      pool.getConnection((err, connection) => {
-        if (err) {
-          reject(err);
-        }
-        const sql = `SELECT
+      const sql_query = `SELECT
           sum(ir.return_value) as returnTotal,
           sum(ir.debit_balance) as returnDebitBalance,
           count(ir.iditem_return) as returnItemCount
         FROM item_return ir
         where ir.item_return_date >= '${fromDate}' and ir.item_return_date <= '${toDate} 23:59:59'
         `;
-        connection.query(
-          sql,
+        sql.query(
+          sql_query,
           (itemReturnSummeryErr, itemReturnSummeryResult) => {
-            connection.release();
+            
             console.log(sql);
             if (itemReturnSummeryErr) {
               reject(itemReturnSummeryErr);
@@ -165,7 +140,6 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
             }
           },
         );
-      });
     });
     return result;
   };
@@ -217,7 +191,7 @@ Report.getReportStatictics = async ({ fromDate, toDate, idToken }, res) => {
         sql.query(
           sql_query,
           (itemReturnSummeryErr, itemReturnSummeryResult) => {
-            connection.release();
+            
             // console.log(sql);
             if (itemReturnSummeryErr) {
               reject(itemReturnSummeryErr);
@@ -245,4 +219,3 @@ fromDate, toDate, type, idToken,
 
 
 module.exports = Report;
-

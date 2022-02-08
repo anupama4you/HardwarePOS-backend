@@ -2,7 +2,7 @@ const sql = require('../../db_config/db');
 const Payment = require('../models/payment.model')
 const ReturnItem = require('../models/returnItem.model')
 
-const Customer = function(customer) {};
+const Customer = function (customer) {};
 
 Customer.addCustomerQuery = async ({
     customer_name, customer_address, customer_nic, customer_mobile, customer_discount,
@@ -364,4 +364,4 @@ Customer.addCustomerQuery = async ({
     // save order details with batch id
   };  
 
-  module.exports = Customer;
+module.exports = Customer;

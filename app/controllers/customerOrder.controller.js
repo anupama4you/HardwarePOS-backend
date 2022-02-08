@@ -64,4 +64,3 @@ exports.getCustomerOrderByDates = async (req, res) => {
     });
     res.send(result);
   };
-  

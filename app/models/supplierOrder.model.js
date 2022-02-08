@@ -1,123 +1,115 @@
-const { isError } = require('@sentry/utils');
 const sql = require('../../db_config/db');
 
-const SupplierOrder = function(supplierOrder) {};
-
-SupplierOrder.getOrdersBySupplierId = async (supplierId) => {
-    const result = await new Promise((resolve, reject) => {
-      sql.query(`SELECT * FROM supplyorder WHERE supplier_id = ${supplierId}`, (err, res) => {
-        if (err) {
-          throw err;
-        } else {
-          resolve(res);
-        }
-      });
-    });
-    return result;
+// constructor
+const User = function(user) {
+    this.user_firebase_uid = user.user_firebase_uid;
+    this.email = user.email,
+    this.password = user.password,
+    this.user_role_type = user.user_role_type;
+    this.user_status = user.user_status;
+    this.shop_id = user.shop_id;
   };
 
-  SupplierOrder.getSupplyOrdersByDates = async ({
-    supplierId, fromDate, toDate
-    }, res) => {
-       
-      const fromDateF = fromDate+' 00:00:00'
-      const toDateF = toDate+' 23:59:59'
-
-    const result = await new Promise((resolve, reject) => { 
-      console.log(fromDateF)
-      sql.query(`SELECT * from supplyorder where supplier_id = '${supplierId}' and date >= '${fromDateF}' and date <= '${toDateF}'`, (err, rows) => {
-        if (err) {
-          throw err;
-        } else {
-          resolve(rows);
-        }
-      });
-    });
-    return result;
-  };
-
-  SupplierOrder.getOrderDetailsBySupplierOrderId = async (supOrderId, res) => {
-    const result = await new Promise((resolve, reject) => {
-      sql.query(`SELECT shb.*,b.buying_price,b.selling_price,i.code,i.description,i.name
-        FROM supplyorder_has_batch shb, batch b, item i
-        WHERE supplyorder_order_Id = ${supOrderId}
-        and shb.batch_batch_id=b.batch_id
-        and b.item_item_id = i.item_id `, (err, res) => {
-        if (err) {
-          throw err;
-        } else {
-          resolve(res);
-        }
-      });
-    });
-    return result;
-  };
-
-  SupplierOrder.deleteSupplyOrder = async (supplyOrderId, res) => {
+  //add users
+  User.addUser = async (newUser, result) => {
+    sql.query("INSERT INTO users SET user_firebase_uid =?, name=?, user_email=?, user_role_type=?, shop_id=?, user_status=?",
+    [newUser.user_firebase_uid, newUser.name, newUser.user_email, newUser.user_role_type, newUser.shop_id, newUser.user_status], (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(err, null);
+        return;
+      }
   
-    try {
-      const result = await new Promise((resolve, reject) => {
-
-        sql.query(`select * from supplyorder so, supplyorder_has_batch shb
-            where so.order_id =${supplyOrderId}
-          and so.order_Id = shb.supplyorder_order_Id`,
-        [supplyOrderId], (error, results) => {
-          if (error) {
-            return sql.rollback(() => {
-              throw error;
-            });
-          }
-          if (!results) {
-            return sql.rollback(() => {
-              resolve({
-                code: 100,
-                message: 'supplier order must contain items'
-              });
-            });
-          }
-          for (let i = 0; i < results.length; i++) {
-            console.log(results[i]);
-            sql.query(
-              `update batch set qty = (qty-${results[i].supplyorder_has_batch__qty}) where batch_id = ${results[i].batch_batch_id}`,
-              (addSupplyOrderError) => {
-                if (addSupplyOrderError) {
-                  return sql.rollback(() => {
-                    throw addSupplyOrderError;
-                  });
-                }
-                if (results.length === i + 1) {
-                  sql.query(
-                    `delete FROM supplyorder where order_Id = ${supplyOrderId}`,
-                    (deleteSupplyOrderError, deleteSupplyOrderResult) => {
-                      if (deleteSupplyOrderError) {
-                        return sql.rollback(() => {
-                          throw deleteSupplyOrderError;
-                        });
-                      }
-                      sql.commit((commiterr) => {
-                        if (commiterr) {
-                          sql.rollback(() => {
-                            throw commiterr;
-                          });
-                        }
-                      });
-                      console.log('deleteSupplyOrderResult ', deleteSupplyOrderResult);
-                      resolve({ code: 200, status: 'Success' });
-                      return null;
-                    },
-                  );
-                }
-                return null;
-              },
-            );
-          }
-        },
-        );
-      });
-      return result;
-    } catch (e) {
-      return e;
-    }
+      console.log("created user: ", { id: res.insertId, ...newUser });
+      result(null, { id: res.insertId, ...newUser });
+      }
+    );
   };
 
-module.exports = SupplierOrder;
+  //get all users
+  User.getAllUsers = async (result) => {
+    sql.query("SELECT * FROM users", (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(null, err);
+        return;
+      }
+      return(res);
+    });
+  };
+
+  //get user by firebase id
+User.findByFirebaseId = async(user_firebase_uid) => {
+  const result = await new Promise((resolve, reject) => {
+    sql.query(`SELECT * FROM users WHERE user_firebase_uid = ?`,
+      [user_firebase_uid], (customerGetErr, customerGetResult) => {
+        if (customerGetErr) {
+          throw customerGetErr;
+        } else {
+
+          resolve(customerGetResult);
+        }
+    });
+  });
+  return result;
+};
+
+  //get user by user id
+  User.findByUserId = async (user_id, result) => {
+    sql.query(`SELECT * FROM users WHERE user_id = ${user_id} LIMIT 1`, (err, res) => {
+      if (err) {
+        console.log("error: ", err);
+        result(err, null);
+        return;
+      }
+  
+      if (res.length) {
+        console.log("found user: ", res[0]);
+        result(null, res[0]);
+        return;
+      }
+  
+      // not found User with the id
+      result({ kind: "not_found" }, null);
+    });
+  };
+
+  //update user
+  User.updateUserById = async(id, user) => {
+    sql.query(
+      "UPDATE users SET name=?, user_email=?, user_role_type = ?, SHOP_ID = ?, user_status = ? WHERE user_firebase_uid = ?",
+      [user.name, user.user_email, user.user_role_type, user.shop_id, user.user_status, id],
+      (err, res) => {
+        if (err) {
+          console.log("error: ", err);
+          return err;
+        }
+  
+        if (res.affectedRows == 0) {
+          // not found User with the id
+          return ({ kind: "not_found" });
+        }
+  
+        // console.log("updated user: ", { id: id, ...user });
+        return res;
+      }
+    );
+  };
+  
+    User.deleteUser = async(id, result) => {
+      sql.query("DELETE FROM users WHERE user_firebase_uid = ?", id, (error, res) => {
+        if (error) throw error;
+        
+        if (res.affectedRows == 0) {
+          // not found User with the id
+          result({ kind: "not_found" }, null);
+          return;
+        }
+
+        console.log("deleted user with id: ", id);
+        result(null, res);
+        
+      });
+    };
+
+  module.exports = User;
