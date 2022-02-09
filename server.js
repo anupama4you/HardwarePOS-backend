@@ -7,13 +7,6 @@ const express = require("express"),
 const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
 
-// setup database
-// db = mysql.createConnection({
-// 	host: process.env.HOST,
-// 	user: process.env.USER,
-// 	password: process.env.PASSWORD,
-// 	database: process.env.DB,
-// });
 
 // make server object that contain port property and the value for our server.
 var server = {
@@ -21,13 +14,6 @@ var server = {
 };
 
 // use the modules
-app.use(
-	cors({
-		// origin: process.env.FRONT_END_URL,
-		origin: 'http://localhost:3000',
-		// origin: "*"
-	})
-);
 app.use(cors());
 
 app.use(bodyParser.json());
@@ -69,4 +55,3 @@ app.listen(server.port, () =>
 // 	res.statusCode = 500;
 // 	res.end(res.sentry + "\n");
 // });
-
