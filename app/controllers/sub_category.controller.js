@@ -1,4 +1,4 @@
-const pool = require('../models/db')
+const sql = require('../../db_config/db')
 const SubCategory = require('../models/sub_category.model')
 
 exports.getSubCategory = async (req, res) => {

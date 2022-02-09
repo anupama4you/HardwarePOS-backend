@@ -1,4 +1,4 @@
-const pool = require('../models/db')
+const pool = require('../../db_config/db')
 const Category = require('../models/category.model')
 
 const addCategory = async (req, res) => {

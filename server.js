@@ -1,21 +1,36 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-require("dotenv").config();
+const express = require("express"),
+	app = express(),
+	cors = require("cors"),
+	bodyParser = require("body-parser"),
+	mysql = require("mysql"); // import mysql module
 
 const Sentry = require("@sentry/node");
 const Tracing = require("@sentry/tracing");
 
-const app = express();
-const port = 4000;
+// setup database
+// db = mysql.createConnection({
+// 	host: process.env.HOST,
+// 	user: process.env.USER,
+// 	password: process.env.PASSWORD,
+// 	database: process.env.DB,
+// });
 
-// parse requests of content-type: application/json
-app.use(bodyParser.json());
+// make server object that contain port property and the value for our server.
+var server = {
+	port: 4000,
+};
+
+// use the modules
 app.use(
 	cors({
-		origin: process.env.FRONT_END_URL,
+		// origin: process.env.FRONT_END_URL,
+		origin: 'http://localhost:3000',
+		// origin: "*"
 	})
 );
+app.use(cors());
+
+app.use(bodyParser.json());
 
 Sentry.init({
 	dsn:
@@ -42,18 +57,16 @@ app.use(Sentry.Handlers.tracingHandler());
 //All handlers
 require("./app/routes/routes")(app);
 
-// parse requests of content-type: application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
+// starting the server
+app.listen(server.port, () =>
+	console.log(`Server started, listening port: ${server.port}`)
+);
 
-// Optional fallthrough error handler
-app.use(function onError(err, req, res, next) {
-	// The error id is attached to `res.sentry` to be returned
-	// and optionally displayed to the user for support.
-	res.statusCode = 500;
-	res.end(res.sentry + "\n");
-});
+// // Optional fallthrough error handler
+// app.use(function onError(err, req, res, next) {
+// 	// The error id is attached to `res.sentry` to be returned
+// 	// and optionally displayed to the user for support.
+// 	res.statusCode = 500;
+// 	res.end(res.sentry + "\n");
+// });
 
-// set port, listen for requests
-app.listen(port, () => {
-	console.log("Server is running on port 4000.");
-});
